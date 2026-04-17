@@ -230,3 +230,39 @@ EXCEPTION
         RAISE EXCEPTION 'insert_cdr failed: %', SQLERRM;
 END;
 $$;
+
+
+-- ============================================================
+-- dummy data for testing
+-- ============================================================
+
+INSERT INTO rateplan (name, ror_data, ror_voice, ror_sms, price)
+VALUES
+    ('Basic', 0.10, 0.20, 0.05, 50),
+    ('Premium', 0.05, 0.10, 0.02, 120);
+
+-- ------------------------------------------------------------
+-- SERVICE PACKAGES
+-- ------------------------------------------------------------
+INSERT INTO service_package (name, type, amount, priority)
+VALUES
+    ('Voice Pack', 'voice', 1000, 1),
+    ('Data Pack', 'data', 5000, 1),
+    ('SMS Pack', 'sms', 200, 1);
+
+-- ------------------------------------------------------------
+-- CUSTOMERS
+-- ------------------------------------------------------------
+-- INSERT INTO customer (name, address, birthdate)
+VALUES-- ============================================================
+
+      ('Ahmed Ali', 'Beni Suef', '1998-05-10'),
+    ('Mohamed Hassan', 'Cairo', '1995-09-22');
+
+-- ------------------------------------------------------------
+-- CONTRACTS
+-- ------------------------------------------------------------
+INSERT INTO contract (customer_id, rateplan_id, msisdn, credit_limit, available_credit, status)
+VALUES
+    (1, 1, '201000000001', 200, 200, 'active'),
+    (2, 2, '201000000002', 500, 500, 'active');
