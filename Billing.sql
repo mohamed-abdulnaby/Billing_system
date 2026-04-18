@@ -45,7 +45,14 @@ CREATE TABLE service_package (
                                  amount   NUMERIC(12,4) NOT NULL, -- quota amount (minutes / MB / count)
                                  priority INTEGER NOT NULL DEFAULT 1 -- for consumption order (lower = consumed first)
 );
-
+-- ------------------------------------------------------------
+-- RATEPLAN SERVICE PACKAGES
+-- ------------------------------------------------------------
+CREATE TABLE rateplan_service_package (
+                                rateplan_id        INTEGER NOT NULL REFERENCES rateplan(id),
+                                service_package_id INTEGER NOT NULL REFERENCES service_package(id),
+                                PRIMARY KEY (rateplan_id, service_package_id)
+);
 -- ------------------------------------------------------------
 -- CONTRACT
 -- ties a customer to a rateplan + an MSISDN (phone number)
@@ -67,15 +74,19 @@ CREATE TABLE contract (
 -- in a billing period for a contract
 -- ------------------------------------------------------------
 CREATE TABLE contract_consumption (
-                                      id                  SERIAL PRIMARY KEY,
-                                      contract_id         INTEGER NOT NULL REFERENCES contract(id),
-                                      service_package_id  INTEGER NOT NULL REFERENCES service_package(id),
-                                      rateplan_id         INTEGER NOT NULL REFERENCES rateplan(id),
-                                      starting_date       DATE NOT NULL,
-                                      consumption         NUMERIC(12,4) NOT NULL DEFAULT 0,
-                                      data                NUMERIC(12,4) NOT NULL DEFAULT 0,  -- MB consumed
-                                      minutes             NUMERIC(10,2) NOT NULL DEFAULT 0,  -- voice minutes consumed
-                                      sms                 INTEGER       NOT NULL DEFAULT 0   -- SMS count consumed
+                            contract_id         INTEGER NOT NULL REFERENCES contract(id)
+                            service_package_id  INTEGER NOT NULL REFERENCES service_package(id),
+                            rateplan_id         INTEGER NOT NULL REFERENCES rateplan(id),
+
+                            starting_date       DATE NOT NULL,
+                            ending_date         DATE NOT NULL,
+
+                            consumed            INTEGER NOT NULL DEFAULT 0,
+
+                            bill_id             INTEGER REFERENCES bill(id),
+                            is_billed           BOOLEAN NOT NULL DEFAULT FALSE,
+
+                            PRIMARY KEY (contract_id, service_package_id, rateplan_id, starting_date, ending_date)
 );
 
 -- ------------------------------------------------------------
@@ -96,16 +107,26 @@ CREATE TABLE ror_contract (
 -- BILL
 -- one bill per billing cycle per contract
 -- ------------------------------------------------------------
+CREATE TYPE bill_status AS ENUM ('draft', 'issued', 'paid', 'overdue', 'cancelled');
+
 CREATE TABLE bill (
                       id                   SERIAL PRIMARY KEY,
                       contract_id          INTEGER NOT NULL REFERENCES contract(id),
+                      billing_period_start DATE NOT NULL,
+                      billing_period_end   DATE NOT NULL,
                       billing_date         DATE NOT NULL,
                       recurring_fees       NUMERIC(12,2) NOT NULL DEFAULT 0,
                       one_time_fees        NUMERIC(12,2) NOT NULL DEFAULT 0,
-                      voice_usage          INTEGER NOT NULL DEFAULT 0,  -- seconds
-                      data_usage           INTEGER NOT NULL DEFAULT 0,  -- MB
-                      sms_usage            INTEGER NOT NULL DEFAULT 0,  -- count
-                      taxes                NUMERIC(12,2) NOT NULL DEFAULT 0
+                      voice_usage          INTEGER       NOT NULL DEFAULT 0,  -- minutes
+                      data_usage           INTEGER       NOT NULL DEFAULT 0,  -- MB
+                      sms_usage            INTEGER       NOT NULL DEFAULT 0,  -- count
+                      ROR_charge           NUMERIC(12,2) NOT NULL DEFAULT 0,
+                      taxes                NUMERIC(12,2) NOT NULL DEFAULT 0,
+                      total_amount         NUMERIC(12,2) NOT NULL DEFAULT 0,
+                      status               bill_status   NOT NULL DEFAULT 'draft',
+                      is_paid              BOOLEAN       NOT NULL DEFAULT FALSE,
+
+                      UNIQUE (contract_id, billing_period_start)
 );
 
 -- Now we can add the FK from ror_contract → bill
