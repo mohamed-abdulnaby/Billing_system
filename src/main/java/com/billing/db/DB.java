@@ -1,10 +1,12 @@
 package com.billing.db;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class DB {
-    private static final String db_url = "jdbc:postgresql://ep-snowy-dawn-algt9iaq-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require";
+    private static final String db_url = "jdbc:postgresql://ep-morning-unit-al6mw3wm-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require";
     private static final String db_user = "neondb_owner";
-    private static final String db_password = "npg_eZDj1hp4uUMT";
+    private static final String db_password = "npg_p7fsCv8qntSw";
 
     static Connection conn;
 
