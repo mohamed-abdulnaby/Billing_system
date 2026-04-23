@@ -43,6 +43,9 @@ logs/
 *.log
 catalina.out
 
-# Keep Reference Solutions (if you want to backup them)
-# frontend_reference/
-# backend_reference/
+# Keep Reference Solutions (Locally preserved but hidden from team repo)
+frontend_reference/
+backend_reference/
+frontend_backup_src/
+backend_backup_src/
+docs/
