@@ -1030,3 +1030,32 @@ EXCEPTION
                         p_contract_id, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;
+-------------------------------------------------
+--- return rateplane data 
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION get_rateplan_data(p_rateplan_id INTEGER)
+RETURNS TABLE (
+    id        INTEGER,
+    name      VARCHAR,
+    ror_data  NUMERIC,
+    ror_voice NUMERIC,
+    ror_sms   NUMERIC,
+    price     NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        r.id,
+        r.name,
+        r.ror_data,
+        r.ror_voice,
+        r.ror_sms,
+        r.price
+    FROM
+        rateplan r
+    WHERE
+        r.id = p_rateplan_id;
+END;
+$$;
