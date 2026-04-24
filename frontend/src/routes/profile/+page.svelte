@@ -123,15 +123,38 @@
           <tbody>
             {#each contracts as c}
               <tr>
-                <td style="font-weight: 600;">{c.msisdn}</td>
-                <td>{c.rateplanName || '—'}</td>
+                <td><span class="phone-num">{c.msisdn}</span></td>
+                <td style="font-weight:600">{c.rateplanName || '—'}</td>
                 <td>
                    <div class="flex items-center gap-2">
-                     <span class="status-dot-sm {c.status}"></span>
                      <span class="badge badge-{c.status}">{c.status}</span>
                    </div>
                 </td>
-                <td style="font-weight: 700;">{c.availableCredit} EGP</td>
+                <td><span class="amount-num">{c.availableCredit} EGP</span></td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {/if}
+
+  {#if invoices.length > 0}
+    <div class="section animate-fade" style="animation-delay: 0.5s; margin-top: 3rem;">
+      <div class="section-header">
+        <h2>My Invoices</h2>
+        <p>Historical billing records and financial statements</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>ID</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            {#each invoices as inv}
+              <tr>
+                <td><span class="id-badge">#{inv.id}</span></td>
+                <td class="text-muted">{inv.billingDate}</td>
+                <td><span class="amount-num">{inv.taxes + inv.recurringFees + inv.oneTimeFees} EGP</span></td>
+                <td><span class="badge badge-active">Paid</span></td>
               </tr>
             {/each}
           </tbody>

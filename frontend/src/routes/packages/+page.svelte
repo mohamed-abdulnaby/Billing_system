@@ -13,9 +13,9 @@
       if (pkgsRes.ok) servicePkgs = await pkgsRes.json();
     } catch (e) {
       plans = [
-        { id: 1, name: 'Bronze', rorVoice: 0.10, rorData: 0.05, rorSms: 0.02, price: 99 },
-        { id: 2, name: 'Silver', rorVoice: 0.08, rorData: 0.03, rorSms: 0.01, price: 199 },
-        { id: 3, name: 'Gold', rorVoice: 0.05, rorData: 0.02, rorSms: 0.005, price: 349 }
+        { id: 1, name: 'Prepaid Standard', rorVoice: 0.25, rorData: 0.15, rorSms: 0.05, price: 0 },
+        { id: 2, name: 'Postpaid Premium', rorVoice: 0.15, rorData: 0.10, rorSms: 0.03, price: 149 },
+        { id: 3, name: 'Elite Enterprise', rorVoice: 0.10, rorData: 0.05, rorSms: 0.01, price: 499 }
       ];
     }
     loading = false;
@@ -100,18 +100,24 @@
               </div>
             </div>
             <div class="plan-features">
-              <div class="feature-row">
-                <span class="feature-label">Voice</span>
-                <span class="feature-value">{pkg.type === 'voice' ? pkg.amount : 0} Min</span>
-              </div>
-              <div class="feature-row">
-                <span class="feature-label">Data</span>
-                <span class="feature-value">{pkg.type === 'data' ? pkg.amount : 0} MB</span>
-              </div>
-              <div class="feature-row">
-                <span class="feature-label">SMS</span>
-                <span class="feature-value">{pkg.type === 'sms' ? pkg.amount : 0} SMS</span>
-              </div>
+              {#if pkg.type === 'voice' || pkg.voiceAmount > 0}
+                <div class="feature-row">
+                  <span class="feature-label">Voice Allowance</span>
+                  <span class="feature-value">{pkg.amount || pkg.voiceAmount} Minutes</span>
+                </div>
+              {/if}
+              {#if pkg.type === 'data' || pkg.dataAmount > 0}
+                <div class="feature-row">
+                  <span class="feature-label">Data Allowance</span>
+                  <span class="feature-value">{pkg.amount || pkg.dataAmount} MB</span>
+                </div>
+              {/if}
+              {#if pkg.type === 'sms' || pkg.smsAmount > 0}
+                <div class="feature-row">
+                  <span class="feature-label">SMS Allowance</span>
+                  <span class="feature-value">{pkg.amount || pkg.smsAmount} SMS</span>
+                </div>
+              {/if}
               <div class="feature-row" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border);">
                 <span class="feature-label">Support</span>
                 <span class="feature-value" style="color: {pkg.is_roaming ? 'var(--red)' : 'inherit'}">

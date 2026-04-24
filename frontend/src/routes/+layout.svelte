@@ -53,7 +53,7 @@
 				<a
 					href="/packages"
 					class="nav-link"
-					class:active={$page.url.pathname === '/packages'}
+					class:active={$page.url.pathname.startsWith('/packages')}
 				>Packages</a>
 
 				{#if user && user.role === 'admin'}
@@ -176,8 +176,8 @@
 	}
 
 	.nav-link.active {
-		color: var(--red-light);
-		background: rgba(224, 8, 0, 0.12);
+		color: #f59e0b; /* Premium Gold */
+		background: rgba(245, 158, 11, 0.12);
 	}
 
 	.nav-spacer {

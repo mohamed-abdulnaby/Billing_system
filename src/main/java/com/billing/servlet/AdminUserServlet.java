@@ -13,40 +13,37 @@ public class AdminUserServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        String pathParam = getPathParam(req);
-        try {
+        handle(res, () -> {
+            String pathParam = getPathParam(req);
             if (pathParam == null) {
-                sendJson(res, DB.executeSelect("SELECT id, username, name, email, role, address, birthdate FROM user_account WHERE role = 'customer' ORDER BY id DESC"));
+                return DB.executeSelect("SELECT id, username as msisdn, name, email, role, address, birthdate, category FROM user_account WHERE role = 'customer' ORDER BY id DESC");
             } else {
                 int id = Integer.parseInt(pathParam);
-                List<Map<String, Object>> list = DB.executeSelect("SELECT id, username, name, email, role, address, birthdate FROM user_account WHERE id = ?", id);
-                if (list.isEmpty()) sendError(res, 404, "User not found");
-                else sendJson(res, list.get(0));
+                List<Map<String, Object>> list = DB.executeSelect("SELECT id, username as msisdn, name, email, role, address, birthdate, category FROM user_account WHERE id = ?", id);
+                if (list.isEmpty()) throw new RuntimeException("Customer not found");
+                return list.get(0);
             }
-        } catch (Exception e) {
-            sendError(res, 500, e.getMessage());
-        }
+        });
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        try {
+        handle(res, () -> {
             Map<String, Object> data = readJson(req);
-            String username = (String) data.getOrDefault("username", data.get("email"));
+            String msisdn = (String) data.get("msisdn");
+            String category = (String) data.getOrDefault("category", "Silver");
             
             DB.executeUpdate(
-                "INSERT INTO user_account (username, password, name, email, role, address, birthdate) VALUES (?, ?, ?, ?, 'customer', ?, ?)",
-                username,
-                "customer123", // Default secure password
+                "INSERT INTO user_account (username, password, name, email, role, address, birthdate, category) VALUES (?, ?, ?, ?, 'customer', ?, ?, ?)",
+                msisdn,
+                "customer123", 
                 data.get("name"),
                 data.get("email"),
                 data.get("address"),
-                data.get("birthdate")
+                data.get("birthdate"),
+                category
             );
-            
-            sendJson(res, Map.of("success", true, "message", "Customer created successfully"));
-        } catch (Exception e) {
-            sendError(res, 500, "Error creating customer: " + e.getMessage());
-        }
+            return Map.of("success", true, "message", "Customer created successfully");
+        });
     }
 }

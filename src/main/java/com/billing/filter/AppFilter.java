@@ -44,11 +44,25 @@ public class AppFilter implements Filter {
         // Normalization
         if (path.length() > 1 && path.endsWith("/")) path = path.substring(0, path.length() - 1);
 
-        // Security Guard: Prevent unauthenticated access to dashboards
-        if (path.startsWith("/admin") || path.startsWith("/profile")) {
-            jakarta.servlet.http.HttpSession session = req.getSession(false);
-            if (session == null || session.getAttribute("user") == null) {
-                res.sendRedirect(req.getContextPath() + "/login");
+        // Security Guard: Strict Role-Based Authorization
+        jakarta.servlet.http.HttpSession session = req.getSession(false);
+        java.util.Map<String, Object> user = (session != null) ? (java.util.Map<String, Object>) session.getAttribute("user") : null;
+
+        if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
+            if (user == null) {
+                if (path.startsWith("/api/")) res.sendError(401, "Authentication required");
+                else res.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+            if (!"admin".equals(user.get("role"))) {
+                if (path.startsWith("/api/")) res.sendError(403, "Admin role required");
+                else res.sendRedirect(req.getContextPath() + "/dashboard");
+                return;
+            }
+        } else if (path.startsWith("/profile") || path.startsWith("/api/customer")) {
+            if (user == null) {
+                if (path.startsWith("/api/")) res.sendError(401, "Authentication required");
+                else res.sendRedirect(req.getContextPath() + "/login");
                 return;
             }
         }

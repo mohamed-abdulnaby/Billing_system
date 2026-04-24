@@ -41,6 +41,14 @@
     search ? cdrs.filter(c => c.msisdn.includes(search) || c.destination.includes(search)) : cdrs
   );
 
+  function formatDuration(s) {
+    if (!s) return '0s';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const rs = s % 60;
+    return (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + (rs + 's');
+  }
+
   $effect(() => { loadCDRs(); });
 </script>
 
@@ -99,7 +107,7 @@
                 <td><span class="id-badge">#{cdr.id}</span></td>
                 <td><span class="phone-num">{cdr.msisdn}</span></td>
                 <td><span class="phone-num">{cdr.destination || '—'}</span></td>
-                <td><span class="duration">{cdr.duration}s</span></td>
+                <td><span class="duration">{formatDuration(cdr.duration)}</span></td>
                 <td>
                   <span class="badge badge-customer">
                     {cdr.type == 1 ? 'Voice' : cdr.type == 2 ? 'Data' : 'SMS'}

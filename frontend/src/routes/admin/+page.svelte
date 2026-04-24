@@ -18,25 +18,12 @@
     }
 
     try {
-      const res = await fetch('/api/admin/customers', { credentials: 'include' });
+      const res = await fetch('/api/admin/stats', { credentials: 'include' });
       if (res.ok) {
-        const customers = await res.json();
-        stats.customers = customers.length;
-      }
-      const cRes = await fetch('/api/admin/contracts', { credentials: 'include' });
-      if (cRes.ok) {
-        const contracts = await cRes.json();
-        stats.contracts = contracts.length;
-      }
-      const bRes = await fetch('/api/admin/bills', { credentials: 'include' });
-      if (bRes.ok) {
-        const bills = await bRes.json();
-        stats.invoices = bills.length;
-      }
-      const cdrRes = await fetch('/api/admin/cdr', { credentials: 'include' });
-      if (cdrRes.ok) {
-        const cdrs = await cdrRes.json();
-        stats.cdrs = cdrs.length;
+        const data = await res.json();
+        stats.customers = data.customers;
+        stats.contracts = data.contracts;
+        stats.cdrs = data.cdrs;
       }
     } catch {}
   }

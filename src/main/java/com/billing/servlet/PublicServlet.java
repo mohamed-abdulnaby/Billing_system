@@ -21,7 +21,11 @@ public class PublicServlet extends BaseServlet {
             String sub = path != null ? path.replace("/rateplans", "") : "";
             if (sub.isEmpty() || "/".equals(sub)) {
                 try {
-                    sendJson(res, DB.executeSelect("SELECT * FROM rateplan ORDER BY id"));
+                    sendJson(res, DB.executeSelect(
+                        "SELECT id, name, price, ror_voice AS rorVoice, ror_data AS rorData, ror_sms AS rorSms " +
+                        "FROM rateplan WHERE name IN ('Prepaid Standard', 'Premium Gold', 'Elite Enterprise') " +
+                        "ORDER BY price ASC"
+                    ));
                 } catch (Exception e) {
                     sendError(res, 500, e.getMessage());
                 }
@@ -41,7 +45,11 @@ public class PublicServlet extends BaseServlet {
         } else if (path.startsWith("/service-packages")) {
             // GET /api/public/service-packages
             try {
-                sendJson(res, DB.executeSelect("SELECT * FROM service_package ORDER BY id"));
+                sendJson(res, DB.executeSelect(
+                    "SELECT id, name, description, price, is_roaming AS isRoaming, type, amount, " +
+                    "voice_amount AS voiceAmount, data_amount AS dataAmount, sms_amount AS smsAmount " +
+                    "FROM service_package ORDER BY price ASC"
+                ));
             } catch (Exception e) {
                 sendError(res, 500, e.getMessage());
             }
