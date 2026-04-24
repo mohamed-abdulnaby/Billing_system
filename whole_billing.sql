@@ -218,7 +218,7 @@ RETURN CASE p_service_type
            WHEN 'voice' THEN CEIL(p_duration / 60.0)  -- convert seconds to minutes, round up
            WHEN 'data'  THEN p_duration
            WHEN 'sms'   THEN 1
-           WHEN 'free_units' THEN 1
+           WHEN 'free_units' THEN p_duration
     END;
 END;
 $$ LANGUAGE plpgsql;
@@ -743,11 +743,39 @@ $$ LANGUAGE plpgsql;
 
 
 -- ------------------------------------------------------------
+-- GET USER DATA
+-- ------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION get_user_data(p_user_account_id INTEGER)
+RETURNS TABLE (
+    username VARCHAR(255),
+    role VARCHAR(20),
+    name VARCHAR(255),
+    email VARCHAR(255),
+    address TEXT,
+    birthdate DATE
+) AS $$
+BEGIN
+RETURN QUERY
+SELECT
+    ua.username,
+    ua.role,
+    ua.name,
+    ua.email,
+    ua.address,
+    ua.birthdate
+FROM user_account ua
+WHERE ua.id = p_user_account_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ------------------------------------------------------------
 -- Retrieve BILL DATA
 -- In a real system, you'd likely have a separate service that queries the bill data
 -- ------------------------------------------------------------
 
-   CREATE OR REPLACE FUNCTION get_bill(p_bill_id INTEGER)
+CREATE OR REPLACE FUNCTION get_bill(p_bill_id INTEGER)
 RETURNS TABLE (
     contract_id INTEGER,
     billing_period_start DATE,
@@ -767,25 +795,24 @@ RETURNS TABLE (
 BEGIN
 RETURN QUERY
 SELECT
-    contract_id,
-    billing_period_start,
-    billing_period_end,
-    billing_date,
-    recurring_fees,
-    one_time_fees,
-    voice_usage,
-    data_usage,
-    sms_usage,
-    ROR_charge,
-    taxes,
-    total_amount,
-    status,
-    is_paid
-FROM bill
-WHERE id = p_bill_id;
+    b.contract_id,
+    b.billing_period_start,
+    b.billing_period_end,
+    b.billing_date,
+    b.recurring_fees,
+    b.one_time_fees,
+    b.voice_usage,
+    b.data_usage,
+    b.sms_usage,
+    b.ROR_charge,
+    b.taxes,
+    b.total_amount,
+    b.status,
+    b.is_paid
+FROM bill b
+WHERE b.id = p_bill_id;
 END;
 $$ LANGUAGE plpgsql;
-
 -- ------------------------------------------------------------
 -- MARK BILL AS PAID
 -- ------------------------------------------------------------
