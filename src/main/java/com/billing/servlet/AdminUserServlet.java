@@ -30,23 +30,41 @@ public class AdminUserServlet extends BaseServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         handle(res, () -> {
             Map<String, Object> data = readJson(req);
-            String username = (String) data.get("username");
-            String name = (String) data.get("name");
-            String email = (String) data.get("email");
-            String address = (String) data.get("address");
+
+            String username  = (String) data.get("username");
+            String password  = (String) data.get("password");
+            String role      = (String) data.get("role");
+            String name      = (String) data.get("name");
+            String email     = (String) data.get("email");
+            String address   = (String) data.get("address");
             String birthdate = (String) data.get("birthdate");
 
+            if (username == null || username.isBlank())
+                throw new RuntimeException("username is required");
+            if (password == null || password.isBlank())
+                throw new RuntimeException("password is required");
+            if (email == null || email.isBlank())
+                throw new RuntimeException("email is required");
+
+            // Use provided password instead of hardcoded value
             List<Map<String, Object>> result = DB.executeSelect(
-                "SELECT create_customer(?, ?, ?, ?, ?, ?::DATE) as id",
-                username,
-                "customer123",
-                name,
-                email,
-                address,
-                birthdate
+                    "SELECT create_customer(?, ?, ?, ?, ?, ?::DATE) AS id",
+                    username,
+                    password,
+                    name,
+                    email,
+                    address,
+                    birthdate
             );
+
             int newId = ((Number) result.get(0).get("id")).intValue();
-            return Map.of("success", true, "message", "Customer created successfully", "id", newId);
+
+            // Update role if provided and different from default
+            if (role != null && !role.isBlank() && !role.equals("customer")) {
+                DB.executeSelect("UPDATE user_account SET role = ? WHERE id = ?", role, newId);
+            }
+
+            return Map.of("success", true, "id", newId, "message", "Customer created successfully");
         });
     }
 }

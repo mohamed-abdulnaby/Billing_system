@@ -34,12 +34,18 @@ public class AdminContractServlet extends BaseServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         try {
             Map body = readJson(req, Map.class);
+
+            int userId      = ((Number) body.get("userId")).intValue();
+            int ratePlanId  = ((Number) body.get("ratePlanId")).intValue();
+            String msisdn   = (String) body.get("msisdn");
+            double creditLimit = ((Number) body.get("creditLimit")).doubleValue();
+
             List<Map<String, Object>> result = DB.executeSelect(
-                    "SELECT create_contract(?, ?, ?, ?) AS id",
-                    body.get("userId"),
-                    body.get("ratePlanId"),
-                    body.get("msisdn"),
-                    body.get("creditLimit")
+                    "SELECT create_contract(?::integer, ?::integer, ?, ?::numeric) AS id",
+                    userId,
+                    ratePlanId,
+                    msisdn,
+                    creditLimit
             );
             res.setStatus(201);
             sendJson(res, result.get(0));
