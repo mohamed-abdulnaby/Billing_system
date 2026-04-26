@@ -263,6 +263,17 @@
     letter-spacing: -0.02em;
   }
   .page-subtitle { color: var(--text-secondary); margin-top: 0.5rem; }
+  .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem; /* Extra space for badges */
+    overflow: visible;
+  }
+  .packages-section {
+    padding: 6rem 0;
+    overflow: visible;
+  }
   .plans-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -285,6 +296,7 @@
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    overflow: visible;
   }
   .bundle-card:hover {
     transform: translateY(-8px);
@@ -302,15 +314,33 @@
   }
   .support-row { margin-top: 0.5rem; padding-top: 1rem; border-top: 1px dashed var(--border); }
 
-  .plan-badge.trend { background: linear-gradient(135deg, #FF4B2B, #FF416C); box-shadow: 0 0 15px rgba(255, 65, 108, 0.4); }
-  .plan-badge.promo { background: linear-gradient(135deg, #F59E0B, #D97706); }
-  .plan-badge.roaming { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+  .plan-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: white;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .plan-badge.trend { background: linear-gradient(135deg, #FF4B2B, #FF416C); box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4); }
+  .plan-badge.promo { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); }
+  .plan-badge.roaming { background: linear-gradient(135deg, #3B82F6, #2563EB); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
 
   .plan-header h3 {
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    color: white;
+    background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   .plan-price { display: flex; align-items: baseline; justify-content: center; gap: 0.25rem; }
   .currency { font-size: 1rem; color: var(--text-muted); font-weight: 500; }

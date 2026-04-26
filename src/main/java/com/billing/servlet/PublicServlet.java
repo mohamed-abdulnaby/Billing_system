@@ -20,39 +20,19 @@ public class PublicServlet extends BaseServlet {
             // GET /api/public/rateplans
             String sub = path != null ? path.replace("/rateplans", "") : "";
             if (sub.isEmpty() || "/".equals(sub)) {
-                try {
-                    sendJson(res, DB.executeSelect(
-                        "SELECT id, name, price, ror_voice AS rorVoice, ror_data AS rorData, ror_sms AS rorSms " +
-                        "FROM rateplan WHERE name IN ('Prepaid Standard', 'Premium Gold', 'Elite Enterprise') " +
-                        "ORDER BY price ASC"
-                    ));
-                } catch (Exception e) {
-                    sendError(res, 500, e.getMessage());
-                }
+                handle(res, () -> DB.executeSelect("SELECT * FROM get_all_rateplans()"));
             } else {
                 // GET /api/public/rateplans/3
-                try {
+                handle(res, () -> {
                     int id = Integer.parseInt(sub.substring(1));
-                    List<Map<String, Object>> plan = DB.executeSelect("SELECT * FROM rateplan WHERE id = ?", id);
-                    if (plan.isEmpty()) sendError(res, 404, "Rate plan not found");
-                    else sendJson(res, plan.get(0));
-                } catch (NumberFormatException e) {
-                    sendError(res, 400, "Invalid ID");
-                } catch (Exception e) {
-                    sendError(res, 500, e.getMessage());
-                }
+                    List<Map<String, Object>> plan = DB.executeSelect("SELECT * FROM get_rateplan_by_id(?)", id);
+                    if (plan.isEmpty()) throw new RuntimeException("Rate plan not found");
+                    return plan.get(0);
+                });
             }
         } else if (path.startsWith("/service-packages")) {
             // GET /api/public/service-packages
-            try {
-                sendJson(res, DB.executeSelect(
-                    "SELECT id, name, description, price, is_roaming AS isRoaming, type, amount, " +
-                    "voice_amount AS voiceAmount, data_amount AS dataAmount, sms_amount AS smsAmount " +
-                    "FROM service_package ORDER BY price ASC"
-                ));
-            } catch (Exception e) {
-                sendError(res, 500, e.getMessage());
-            }
+            handle(res, () -> DB.executeSelect("SELECT * FROM get_all_service_packages()"));
         } else {
             sendError(res, 404, "Not found");
         }

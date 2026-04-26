@@ -168,6 +168,16 @@ body {
 	box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9), 0 0 30px rgba(224, 8, 0, 0.15);
 }
 
+.card-static {
+	transform: none !important;
+	box-shadow: var(--shadow-premium) !important;
+}
+.card-static:hover {
+	transform: none !important;
+	box-shadow: var(--shadow-premium) !important;
+	border-color: var(--border) !important;
+}
+
 .page-header {
 	margin-bottom: 2.5rem;
 }

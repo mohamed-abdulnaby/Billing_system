@@ -17,18 +17,18 @@ public class AdminContractServlet extends BaseServlet {
             String path = req.getPathInfo();
             if (path == null || "/".equals(path)) {
                 String sql = "SELECT c.id, c.msisdn, c.status, c.available_credit as \"availableCredit\", " +
-                             "u.name as \"customerName\", r.name as \"rateplanName\" " +
+                             "cust.name as \"customerName\", r.name as \"rateplanName\" " +
                              "FROM contract c " +
-                             "JOIN user_account u ON c.user_account_id = u.id " +
+                             "JOIN customer cust ON c.customer_id = cust.id " +
                              "LEFT JOIN rateplan r ON c.rateplan_id = r.id " +
                              "ORDER BY c.id DESC";
                 return DB.executeSelect(sql);
             } else {
                 int id = Integer.parseInt(path.substring(1));
-                String sql = "SELECT c.*, u.name as \"customerName\", r.name as \"rateplanName\", " +
+                String sql = "SELECT c.*, cust.name as \"customerName\", r.name as \"rateplanName\", " +
                              "c.available_credit as \"availableCredit\" " +
                              "FROM contract c " +
-                             "JOIN user_account u ON c.user_account_id = u.id " +
+                             "JOIN customer cust ON c.customer_id = cust.id " +
                              "LEFT JOIN rateplan r ON c.rateplan_id = r.id " +
                              "WHERE c.id = ?";
                 List<Map<String, Object>> list = DB.executeSelect(sql, id);
@@ -50,10 +50,12 @@ public class AdminContractServlet extends BaseServlet {
                 throw new RuntimeException("Missing required fields: msisdn, userId, or planId");
             }
 
-            DB.executeUpdate(
-                "INSERT INTO contract (user_account_id, rateplan_id, msisdn, status, credit_limit, available_credit) " +
-                "VALUES (?, ?, ?, 'active', 1000.0, 1000.0)",
-                userId, planId, msisdn
+            Object creditLimit = body.getOrDefault("creditLimit", 1000.0);
+            
+            // Using teammate's stored function to ensure proper initialization
+            DB.executeSelect(
+                "SELECT create_contract(?::INT, ?::INT, ?, ?::NUMERIC) as id",
+                userId, planId, msisdn, creditLimit
             );
             return Map.of("success", true, "message", "Line provisioned for " + msisdn);
         });

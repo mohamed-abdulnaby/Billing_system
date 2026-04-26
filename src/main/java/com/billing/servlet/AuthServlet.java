@@ -38,7 +38,7 @@ public class AuthServlet extends BaseServlet {
 
         try {
             List<Map<String, Object>> users = DB.executeSelect(
-                "SELECT id, username, name, email, role FROM user_account WHERE username = ? AND password = ?",
+                "SELECT * FROM login(?, ?)",
                 username, password
             );
 
