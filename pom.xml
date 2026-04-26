@@ -39,11 +39,16 @@
             <version>2.12.1</version>
         </dependency>
 
-        <!-- Invoicing: JasperReports -->
+        <!-- Invoicing: JasperReports 7.x for Modern Template Support -->
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>6.21.0</version>
+            <version>7.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-pdf</artifactId>
+            <version>7.0.1</version>
         </dependency>
 
 
