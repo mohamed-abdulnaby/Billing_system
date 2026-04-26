@@ -13,8 +13,8 @@ public class AdminContractServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        String path = req.getPathInfo();
-        try {
+        handle(res, () -> {
+            String path = req.getPathInfo();
             if (path == null || "/".equals(path)) {
                 String sql = "SELECT c.id, c.msisdn, c.status, c.available_credit as \"availableCredit\", " +
                              "u.name as \"customerName\", r.name as \"rateplanName\" " +
@@ -22,7 +22,7 @@ public class AdminContractServlet extends BaseServlet {
                              "JOIN user_account u ON c.user_account_id = u.id " +
                              "LEFT JOIN rateplan r ON c.rateplan_id = r.id " +
                              "ORDER BY c.id DESC";
-                sendJson(res, DB.executeSelect(sql));
+                return DB.executeSelect(sql);
             } else {
                 int id = Integer.parseInt(path.substring(1));
                 String sql = "SELECT c.*, u.name as \"customerName\", r.name as \"rateplanName\", " +
@@ -32,26 +32,30 @@ public class AdminContractServlet extends BaseServlet {
                              "LEFT JOIN rateplan r ON c.rateplan_id = r.id " +
                              "WHERE c.id = ?";
                 List<Map<String, Object>> list = DB.executeSelect(sql, id);
-                if (list.isEmpty()) sendError(res, 404, "Contract not found");
-                else sendJson(res, list.get(0));
+                if (list.isEmpty()) throw new RuntimeException("Contract not found");
+                return list.get(0);
             }
-        } catch (Exception e) {
-            sendError(res, 500, e.getMessage());
-        }
+        });
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        try {
-            Map body = readJson(req, Map.class);
-            List<Map<String, Object>> result = DB.executeSelect(
-                "INSERT INTO contract (customer_id, rateplan_id, status) VALUES (?, ?, ?) RETURNING *",
-                body.get("customerId"), body.get("ratePlanId"), body.get("status")
+        handle(res, () -> {
+            Map<String, Object> body = readJson(req);
+            String msisdn = (String) body.get("msisdn");
+            Object userId = body.get("userId");
+            Object planId = body.get("planId");
+            
+            if (msisdn == null || userId == null || planId == null) {
+                throw new RuntimeException("Missing required fields: msisdn, userId, or planId");
+            }
+
+            DB.executeUpdate(
+                "INSERT INTO contract (user_account_id, rateplan_id, msisdn, status, credit_limit, available_credit) " +
+                "VALUES (?, ?, ?, 'active', 1000.0, 1000.0)",
+                userId, planId, msisdn
             );
-            res.setStatus(201);
-            sendJson(res, result.get(0));
-        } catch (Exception e) {
-            sendError(res, 500, e.getMessage());
-        }
+            return Map.of("success", true, "message", "Line provisioned for " + msisdn);
+        });
     }
 }
