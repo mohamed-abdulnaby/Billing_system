@@ -6,7 +6,7 @@ function _page($$renderer, $$props) {
         $$renderer4.push(`<title>Packages — FMRZ</title>`);
       });
     });
-    $$renderer2.push(`<div class="container"><div class="page-header"><div><h1>Rate Plans &amp; <span class="text-gradient">Packages</span></h1> <p class="page-subtitle">Choose the perfect plan for your communication needs</p></div></div> `);
+    $$renderer2.push(`<div class="container"><div class="page-header"><div><h1>Rate Plans &amp; <span class="text-gradient">Packages</span></h1> <p class="page-subtitle">Premium communication solutions tailored for the digital age</p></div></div> `);
     {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="loading">Loading...</div>`);
