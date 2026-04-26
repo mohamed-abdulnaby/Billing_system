@@ -667,6 +667,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ------------------------------------------------------------
+-- GET BILLS THAT ARE MISSING (contracts with no bill this period)
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION get_missing_bills()
+    RETURNS TABLE (
+                      contract_id    INTEGER,
+                      msisdn         VARCHAR(20),
+                      customer_name  VARCHAR(255),
+                      rateplan_name  VARCHAR(255)
+                  ) AS $$
+DECLARE
+    v_period_start DATE := DATE_TRUNC('month', CURRENT_DATE)::DATE;
+BEGIN
+    RETURN QUERY
+        SELECT
+            c.id           AS contract_id,
+            c.msisdn,
+            u.name         AS customer_name,
+            r.name         AS rateplan_name
+        FROM contract c
+                 JOIN user_account u ON c.user_account_id = u.id
+                 LEFT JOIN rateplan r ON c.rateplan_id = r.id
+        WHERE c.status = 'active'
+          AND NOT EXISTS (
+            SELECT 1 FROM bill b
+            WHERE b.contract_id = c.id
+              AND b.billing_period_start = v_period_start
+        )
+        ORDER BY c.id;
+END;
+$$ LANGUAGE plpgsql;
+-- ------------------------------------------------------------
 -- CREATE CONTRACT
 -- Creates a new contract and immediately initializes
 -- consumption rows for the current billing period.
