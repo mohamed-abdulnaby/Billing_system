@@ -161,6 +161,7 @@
                     <installDirectory>${project.basedir}</installDirectory>
                 </configuration>
                 <executions>
+<!-- 
                     <execution>
                         <id>install-node-and-npm</id>
                         <goals><goal>install-node-and-npm</goal></goals>
@@ -169,6 +170,7 @@
                             <nodeVersion>v20.11.0</nodeVersion>
                         </configuration>
                     </execution>
+                    -->
                     <execution>
                         <id>npm-install</id>
                         <goals><goal>npm</goal></goals>
