@@ -7,22 +7,21 @@
     <groupId>com.billing</groupId>
     <artifactId>Billing_system</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
+        <tomcat.version>11.0.0</tomcat.version>
     </properties>
 
     <dependencies>
-        <!-- Tomcat 11 Servlet API -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>${jakarta.servlet.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- PostgreSQL Driver -->
@@ -91,18 +90,22 @@
         </dependency>
 
 
-        <!-- Embedded Tomcat for Standalone Execution (Temporarily Disabled)
+        <!-- Embedded Tomcat for Standalone Execution -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>11.0.0</version>
+            <version>${tomcat.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-jasper</artifactId>
-            <version>11.0.0</version>
+            <artifactId>tomcat-embed-el</artifactId>
+            <version>${tomcat.version}</version>
         </dependency>
-        -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-websocket</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
 
         <!-- HikariCP Connection Pool -->
         <dependency>
@@ -184,7 +187,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Shade Plugin (Creates the Fat JAR) (Temporarily Disabled)
+            <!-- Maven Shade Plugin (Creates the Fat JAR) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -197,14 +200,13 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.billing.BillingApplication</mainClass>
+                                    <mainClass>com.billing.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 </project>
