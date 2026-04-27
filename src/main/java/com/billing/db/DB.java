@@ -17,7 +17,9 @@ import java.util.Properties;
 public class DB {
     private static final Properties props = new Properties();
     private static final HikariDataSource dataSource;
-
+    private static final String URL  = System.getenv("DB_URL");
+    private static final String USER = System.getenv("DB_USER");
+    private static final String PASS = System.getenv("DB_PASS");
     static {
         try (InputStream input = DB.class.getClassLoader().getResourceAsStream("db.properties")) {
             if (input == null) {
@@ -27,9 +29,9 @@ public class DB {
 
             HikariConfig config = new HikariConfig();
             config.setDriverClassName("org.postgresql.Driver");
-            config.setJdbcUrl(props.getProperty("db.url"));
-            config.setUsername(props.getProperty("db.user"));
-            config.setPassword(props.getProperty("db.password"));
+            config.setJdbcUrl(URL);
+            config.setUsername(USER);
+            config.setPassword(PASS);
             
             // Pool Configuration
             config.setMaximumPoolSize(10);
