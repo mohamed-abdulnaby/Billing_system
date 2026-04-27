@@ -45,3 +45,31 @@ This document explains the **Why, Where, and How** for every technical hurdle fa
 
 ### 🚦 Final Operational Note
 The system is now "Hardened." This means it is no longer dependent on your local filesystem paths or hardcoded passwords. It is a self-contained "Engine" ready for any Linux server.
+
+---
+
+## 📄 8. Jasper 7: The Fragmented Font Fix
+- **Where**: `pom.xml` (Maven Shade Plugin)
+- **Why**: JasperReports 7 splits its configuration into multiple JARs. When shading into a Fat JAR, these configuration files were overwriting each other, causing fonts and PDF functions to vanish in the cloud.
+- **The Fix**: Implemented **`AppendingTransformer`**. This tells Maven: *"Instead of choosing one file, stitch them all together."* This ensures all fonts and Jasper functions are available in the final production JAR.
+
+## 🩺 9. Production Observability: The Health Guard
+- **Where**: `Main.java` and `AppFilter.java`
+- **Why**: Cloud platforms like Railway need to know if the app is "alive" before sending traffic. Also, the app needs to clean up its database connections when stopping.
+- **The Fix**: 
+    1.  **Health Endpoint**: Created a JSON `/health` servlet that verifies DB connectivity.
+    2.  **Graceful Shutdown**: Added a `ShutdownHook` to Tomcat to close the HikariCP pool cleanly, preventing "Zombie" database connections.
+    3.  **Routing Bypass**: Updated `AppFilter` to whitelist `/health` so it bypasses the SPA routing.
+
+## 🛡️ 10. Environment Parity: The Golden Image
+- **Where**: `Dockerfile`, `.dockerignore`, and `docker-compose.yml`
+- **Why**: Production images should be as small as possible and never run as root. Also, local builds shouldn't leak "garbage" files into the image.
+- **The Fix**: 
+    1.  **Slim JRE**: Switched to `eclipse-temurin:21-jre-jammy` (saving 150MB).
+    2.  **Non-Root User**: Created `javauser` to run the app, following the "Least Privilege" security principle.
+    3.  **Whitelisting**: Used a strict `.dockerignore` to only allow the Fat JAR and `.env` file into the build context.
+
+## 🧩 11. Safety Net: Defensive Configuration
+- **Where**: `com.billing.db.DB.java`
+- **Why**: Missing environment variables in IntelliJ or Railway lead to cryptic "Driver not found" errors that waste developer time.
+- **The Fix**: Implemented **Placeholder Awareness**. The app now checks for the literal string `REPLACE_WITH_ENV_VAR`. If found, it stops immediately and prints a clean, human-readable "How-To Fix" guide in the console.
