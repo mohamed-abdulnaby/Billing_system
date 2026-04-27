@@ -1,22 +1,7 @@
-# Build Outputs
-target/
-node_modules/
-frontend/node_modules/
-src/main/webapp/_app/
+# Ignore everything by default
+**
 
-# Data & Secrets
-processed/
-*.sql
-.m2/
-
-# IDE & OS Junk
-.git/
-.idea/
-.vscode/
-.DS_Store
-*.log
-
-# Wrapper files
-.mvn/
-mvnw
-mvnw.cmd
+# Allow only the Fat JAR and configuration
+!target/Telecom-Billing-Engine.jar
+!src/main/resources/db.properties
+!.env

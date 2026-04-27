@@ -1,24 +1,31 @@
-# FMRZ Telecom Billing System - Orchestration Blueprint
-# Run with: podman-compose up -d
+# FMRZ Telecom Billing System - Production Orchestration
+# Usage: podman-compose up -d --build
 
 services:
   billing-app:
-    build: .
-    image: telecom-billing-engine:latest
-    container_name: billing-system-core
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: fmr-billing-system:latest
+    container_name: billing-app-prod
     ports:
       - "8080:8080"
     env_file:
       - .env
     environment:
-      # These variables override the values in db.properties inside the container
+      # Paths for CDR processing inside the container
       - CDR_INPUT_PATH=/app/input
       - CDR_PROCESSED_PATH=/app/processed
     volumes:
-      # Map your local folders to the container's internal paths
-      # The :Z flag is for SELinux (Required for Nobara/Fedora)
+      # Data Persistence for CDR Files (with SELinux :Z flag)
       - ./input:/app/input:Z
       - ./processed:/app/processed:Z
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: always
 
-# Note: You can add an 'nginx' service here later to automate the proxy as well!
+# Tip: Run 'podman-compose logs -f' to watch the startup in real-time.

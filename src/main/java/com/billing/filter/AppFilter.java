@@ -69,10 +69,11 @@ public class AppFilter implements Filter {
 
         // 2. ROUTING LOGIC
         boolean isApi = path.startsWith("/api/");
+        boolean isHealth = path.equals("/health") || path.startsWith("/health/");
         boolean isAsset = path.startsWith("/_app/") || (path.contains(".") && !path.endsWith(".html"));
         boolean isRoot = path.equals("/") || path.isEmpty() || path.equals("/index.html");
 
-        if (isApi || isAsset) {
+        if (isApi || isAsset || isHealth) {
             chain.doFilter(request, response);
         } else if (isRoot) {
             handleHtmlInjection(req, res, chain);

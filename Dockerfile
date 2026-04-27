@@ -1,39 +1,24 @@
-# --- STAGE 1: Build Stage (The Workshop) ---
-# We use a full JDK 21 and Maven image to compile the engine
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-WORKDIR /app
-
-# 1. Install Node.js 20 (Required for SvelteKit Frontend Build)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
-
-# 2. Optimization: Cache Maven dependencies
-# By copying only the pom.xml first, we don't have to re-download 
-# the internet every time you change a single line of code.
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# 3. Build the Branded Engine
-# This will trigger the frontend-maven-plugin to build SvelteKit
-COPY . .
-RUN mvn clean package -DskipTests
-
-# --- STAGE 2: Runtime Stage (The Armor) ---
-# We use a slim JRE (Java Runtime Environment) for production security
+# Use Eclipse Temurin JRE for a smaller, secure production image
 FROM eclipse-temurin:21-jre-jammy
+
+# Set working directory
 WORKDIR /app
 
-# 4. Security: Run as a non-root user
-# This prevents an attacker from gaining root access to your host machine
-RUN useradd -m billinguser && chown -R billinguser:billinguser /app
-USER billinguser
+# Create a non-root user for security (Enterprise Best Practice)
+RUN addgroup --system javauser && adduser --system --ingroup javauser javauser
 
-# 5. Deployment: Copy artifact and webapp assets
-COPY --chown=billinguser:billinguser --from=build /app/target/Telecom-Billing-Engine.jar .
-COPY --chown=billinguser:billinguser --from=build /app/src/main/webapp ./src/main/webapp
+# Copy the Fat JAR from the local target folder
+# This relies on you running './mvnw clean package' locally first
+COPY target/Telecom-Billing-Engine.jar app.jar
 
-# 6. Network: Open the Tomcat port
+# Set ownership to the non-root user
+RUN chown javauser:javauser app.jar
+
+# Switch to the non-root user
+USER javauser
+
+# Expose the application port
 EXPOSE 8080
 
-# 7. Launch: The startup entrypoint
-ENTRYPOINT ["java", "-XX:+UseParallelGC", "-jar", "Telecom-Billing-Engine.jar"]
+# Run the application
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]

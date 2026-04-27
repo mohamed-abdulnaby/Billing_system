@@ -107,6 +107,7 @@ public class Main {
             }
         });
         ctx.addServletMappingDecoded("/health", "HealthCheck");
+        ctx.addServletMappingDecoded("/health/*", "HealthCheck");
 
         System.out.println("FMRZ Billing System started on port " + webPort);
         System.out.println("Health Check: http://localhost:" + webPort + "/health");
