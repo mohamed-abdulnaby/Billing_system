@@ -8,7 +8,10 @@ target/
 .m2
 # SvelteKit / Node
 node_modules/
+frontend/node/
+frontend/node_modules/
 .svelte-kit/
+frontend/.svelte-kit/
 build/
 .env
 .env.*

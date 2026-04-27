@@ -90,12 +90,13 @@ public class Main {
         }));
 
         // 5. OBSERVABILITY: Health Check Endpoint
-        // Used by Railway/Podman to monitor if the app is alive.
-        Context healthCtx = tomcat.addContext("/health", new File(".").getAbsolutePath());
-        Tomcat.addServlet(healthCtx, "HealthCheck", new jakarta.servlet.http.HttpServlet() {
+        // Used by Railway/Podman to monitor if the app and DB are alive.
+        Tomcat.addServlet(ctx, "HealthCheck", new jakarta.servlet.http.HttpServlet() {
             @Override
             protected void doGet(jakarta.servlet.http.HttpServletRequest req, 
                                 jakarta.servlet.http.HttpServletResponse resp) throws java.io.IOException {
+                resp.setContentType("application/json");
+                resp.setCharacterEncoding("UTF-8");
                 try (java.sql.Connection conn = com.billing.db.DB.getConnection()) {
                     resp.setStatus(200);
                     resp.getWriter().write("{\"status\":\"UP\", \"database\":\"CONNECTED\"}");
@@ -105,10 +106,10 @@ public class Main {
                 }
             }
         });
-        healthCtx.addServletMappingDecoded("/", "HealthCheck");
+        ctx.addServletMappingDecoded("/health", "HealthCheck");
 
         System.out.println("FMRZ Billing System started on port " + webPort);
-        System.out.println("Health Check available at: http://localhost:" + webPort + "/health");
+        System.out.println("Health Check: http://localhost:" + webPort + "/health");
         tomcat.getServer().await();
     }
 }
