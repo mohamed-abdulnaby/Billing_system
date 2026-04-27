@@ -3,11 +3,10 @@ import adapter from '@sveltejs/adapter-static';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		// adapter-static will generate a pure HTML/JS build
 		adapter: adapter({
-			pages: '../src/main/webapp',
-			assets: '../src/main/webapp',
-			fallback: 'index.html', // Enable SPA mode
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html',
 			precompress: false,
 			strict: true
 		}),
