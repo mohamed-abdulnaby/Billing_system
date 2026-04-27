@@ -8,7 +8,7 @@
   let message = $state('');
 
   async function loadProfile() {
-    const res = await fetch('/api/customer/profile', { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/api/customer/profile`, { credentials: 'include' });
     if (res.ok) {
       profile = await res.json();
     }
@@ -18,7 +18,7 @@
   async function save() {
     saving = true;
     message = '';
-    const res = await fetch('/api/customer/profile', {
+    const res = await fetch(`${API_BASE}/api/customer/profile`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
@@ -35,7 +35,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
       if (!res.ok) {
         window.location.href = '/login';
         return;

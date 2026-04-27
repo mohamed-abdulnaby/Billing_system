@@ -10,7 +10,7 @@
     loading = true;
     try {
       const offset = page * limit;
-      const res = await fetch(`/api/admin/cdr?limit=${limit}&offset=${offset}`, { credentials: 'include' });
+      const res = await fetch(`/api/admin/cdr?limit=${limit}&offset=${offset}`, { credentials: `include' });
       if (res.ok) cdrs = await res.json();
     } catch (e) {
       console.error(e);
@@ -25,7 +25,7 @@
   async function importCDRs() {
     importing = true;
     try {
-      const res = await fetch('/api/admin/cdr', { method: 'POST', credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/admin/cdr`, { method: 'POST', credentials: 'include' });
       if (res.ok) {
         page = 0;
         await loadCDRs();

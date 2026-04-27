@@ -10,8 +10,8 @@
 
     onMount(async () => {
         const [m, r] = await Promise.all([
-            fetch('/api/customer/onboarding/msisdns', { credentials: 'include' }).then(r => r.json()),
-            fetch('/api/customer/onboarding/rateplans', { credentials: 'include' }).then(r => r.json())
+            fetch(`${API_BASE}/api/customer/onboarding/msisdns`, { credentials: 'include' }).then(r => r.json()),
+            fetch(`${API_BASE}/api/customer/onboarding/rateplans`, { credentials: 'include' }).then(r => r.json())
         ]);
         msisdns   = m;
         rateplans = r;
@@ -21,7 +21,7 @@
         loading = true;
         error   = '';
         try {
-            const res = await fetch('/api/customer/onboarding/activate', {
+            const res = await fetch(`${API_BASE}/api/customer/onboarding/activate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

@@ -12,9 +12,9 @@
     loading = true;
     try {
       const [billsRes, statsRes, missingRes] = await Promise.all([
-        fetch(contractId ? `/api/admin/bills?contract_id=${contractId}` : '/api/admin/bills', { credentials: 'include' }),
-        fetch('/api/admin/stats', { credentials: 'include' }),
-        fetch('/api/admin/bills/missing', { credentials: 'include' })
+        fetch(contractId ? `/api/admin/bills?contract_id=${contractId}` : `/api/admin/bills`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/admin/stats`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/admin/bills/missing`, { credentials: 'include' })
       ]);
       
       if (billsRes.ok) bills = await billsRes.json();
@@ -30,7 +30,7 @@
     if (!confirm("This will generate bills for all active contracts for the current month. Proceed?")) return;
     processingBills = true;
     try {
-      const res = await fetch('/api/admin/bills/generate', { method: 'POST', credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/admin/bills/generate`, { method: 'POST', credentials: 'include' });
       if (res.ok) {
         alert("Billing cycle completed successfully!");
         loadData();
@@ -47,7 +47,7 @@
   async function payBill(billId) {
     if (!confirm(`Mark Bill #${billId} as paid?`)) return;
     try {
-      const res = await fetch(`/api/admin/bills/pay?billId=${billId}`, { method: 'POST', credentials: 'include' });
+      const res = await fetch(`/api/admin/bills/pay?billId=${billId}`, { method: `POST', credentials: 'include' });
       if (res.ok) {
         selectedIds.delete(billId);
         loadData();
@@ -64,7 +64,7 @@
     if (!confirm(`Mark ${selectedIds.size} bills as paid?`)) return;
     const ids = Array.from(selectedIds).join(',');
     try {
-      const res = await fetch(`/api/admin/bills/pay-bulk?ids=${ids}`, { method: 'POST', credentials: 'include' });
+      const res = await fetch(`/api/admin/bills/pay-bulk?ids=${ids}`, { method: `POST', credentials: 'include' });
       if (res.ok) {
         selectedIds.clear();
         loadData();

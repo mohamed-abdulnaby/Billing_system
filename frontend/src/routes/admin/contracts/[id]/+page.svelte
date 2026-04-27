@@ -14,9 +14,9 @@
     try {
       const contractId = data.contractId;
       const [contractRes, activeRes, availableRes] = await Promise.all([
-        fetch(`/api/admin/contracts/${contractId}`, { credentials: 'include' }),
-        fetch(`/api/admin/addons/${contractId}`, { credentials: 'include' }),
-        fetch('/api/admin/addons', { credentials: 'include' })
+        fetch(`/api/admin/contracts/${contractId}`, { credentials: `include' }),
+        fetch(`/api/admin/addons/${contractId}`, { credentials: `include' }),
+        fetch(`${API_BASE}/api/admin/addons`, { credentials: 'include' })
       ]);
 
       if (contractRes.ok) contract = await contractRes.json();

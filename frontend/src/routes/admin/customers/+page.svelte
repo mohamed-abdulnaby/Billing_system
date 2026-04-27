@@ -13,7 +13,7 @@
 
   async function createCustomer(e) {
     e.preventDefault();
-    const res = await fetch('/api/admin/customers', {
+    const res = await fetch(`${API_BASE}/api/admin/customers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newCustomer)

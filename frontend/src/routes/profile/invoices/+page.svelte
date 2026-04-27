@@ -8,7 +8,7 @@
 
   async function loadInvoices() {
     try {
-      const res = await fetch('/api/customer/invoices', { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/customer/invoices`, { credentials: 'include' });
       if (res.ok) {
         invoices = await res.json();
       }

@@ -12,7 +12,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
       if (res.ok) {
         const user = await res.json();
         window.location.assign(user.role === 'admin' ? '/admin' : '/profile');
@@ -25,7 +25,7 @@
     error = '';
     loading = true;
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -19,7 +19,7 @@
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch(`${API_BASE}/api/auth/me`);
       if (res.ok) currentUser = await res.json();
     } catch (e) {
       currentUser = null;
@@ -30,8 +30,8 @@
   async function loadData() {
     try {
       const [plansRes, pkgsRes] = await Promise.all([
-        fetch('/api/public/rateplans'),
-        fetch('/api/public/service-packages')
+        fetch(`${API_BASE}/api/public/rateplans`),
+        fetch(`${API_BASE}/api/public/service-packages`)
       ]);
       if (plansRes.ok) plans = await plansRes.json();
       if (pkgsRes.ok) servicePkgs = await pkgsRes.json();
@@ -77,7 +77,7 @@
   }
 
   async function executePurchase(contractId, pkgId, isAdmin = false) {
-    const url = isAdmin ? '/api/admin/addons' : '/api/customer/addons';
+    const url = isAdmin ? '/api/admin/addons` : '/api/customer/addons`;
     const body = isAdmin ? { contractId, servicePackageId: pkgId } : { servicePackageId: pkgId };
 
     try {

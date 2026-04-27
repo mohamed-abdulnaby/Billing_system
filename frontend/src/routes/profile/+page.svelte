@@ -7,7 +7,7 @@
   async function load() {
     // 1. Security Check
     try {
-      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const authRes = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
       if (!authRes.ok) {
         window.location.href = '/login';
         return;
@@ -19,9 +19,9 @@
       }
 
       const [pRes, cRes, iRes] = await Promise.all([
-        fetch('/api/customer/profile', { credentials: 'include' }),
-        fetch('/api/customer/contracts', { credentials: 'include' }),
-        fetch('/api/customer/invoices', { credentials: 'include' })
+        fetch(`${API_BASE}/api/customer/profile`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/customer/contracts`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/customer/invoices`, { credentials: 'include' })
       ]);
       if (pRes.ok) profile = await pRes.json();
       if (cRes.ok) contracts = await cRes.json();

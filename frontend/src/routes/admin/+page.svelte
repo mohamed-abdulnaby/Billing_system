@@ -6,7 +6,7 @@
 
   async function load() {
     // 1. Security Check: Only admins allowed
-    const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+    const authRes = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
     if (!authRes.ok) {
       window.location.href = '/login';
       return;
@@ -18,7 +18,7 @@
     }
 
     try {
-      const res = await fetch('/api/admin/stats', { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/admin/stats`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         stats.customers = data.customers;

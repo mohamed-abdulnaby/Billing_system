@@ -28,7 +28,7 @@
   ];
 
   onMount(async () => {
-    const res = await fetch('/api/auth/me');
+    const res = await fetch(`${API_BASE}/api/auth/me`);
     if (res.ok) {
       const user = await res.json();
       loggedIn = true;

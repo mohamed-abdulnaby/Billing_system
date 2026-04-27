@@ -16,9 +16,9 @@
   async function loadData() {
     try {
       const [cRes, uRes, pRes] = await Promise.all([
-        fetch('/api/admin/contracts', { credentials: 'include' }),
-        fetch('/api/admin/customers', { credentials: 'include' }),
-        fetch('/api/admin/rateplans', { credentials: 'include' })
+        fetch(`${API_BASE}/api/admin/contracts`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/admin/customers`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/admin/rateplans`, { credentials: 'include' })
       ]);
       if (cRes.ok) contracts = await cRes.json();
       if (uRes.ok) customers = await uRes.json();
@@ -45,7 +45,7 @@
     if (!selectedCustomer) { alert("Please select a customer"); return; }
     loading = true;
     try {
-      const res = await fetch('/api/admin/contracts', {
+      const res = await fetch(`${API_BASE}/api/admin/contracts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

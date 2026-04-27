@@ -10,7 +10,7 @@
 
 	async function checkAuth() {
 		try {
-			const res = await fetch(`/api/auth/me`, { credentials: 'include' });
+			const res = await fetch(`/api/auth/me`, { credentials: `include' });
 
 			if (res.ok) user = await res.json(); else user = null;
 		} catch {
@@ -19,7 +19,7 @@
 	}
 
 	async function logout() {
-		await fetch(`/api/auth/logout`, { method: 'POST', credentials: 'include' });
+		await fetch(`/api/auth/logout`, { method: `POST', credentials: 'include' });
 		user = null;
 		window.location.href = `/`;
 	}
