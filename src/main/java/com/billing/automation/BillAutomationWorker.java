@@ -113,13 +113,14 @@ public class BillAutomationWorker implements Runnable {
             JasperExportManager.exportReportToPdfFile(print, pdfPath);
             System.out.println("✅ [Automation] PDF generated: " + pdfPath);
 
-            // Optional: Register the generated file path back to the DB
+            // Register the generated file path in the 'invoice' table
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "UPDATE bill SET invoice_path = ? WHERE id = ?")) {
-                pstmt.setString(1, pdfPath);
-                pstmt.setInt(2, billId);
+                    "INSERT INTO invoice (bill_id, pdf_path) VALUES (?, ?) " +
+                    "ON CONFLICT (bill_id) DO UPDATE SET pdf_path = EXCLUDED.pdf_path")) {
+                pstmt.setInt(1, billId);
+                pstmt.setString(2, pdfPath);
                 pstmt.executeUpdate();
-                System.out.println("💾 [Automation] DB updated with invoice path for Bill " + billId);
+                System.out.println("💾 [Automation] Invoice table updated for Bill " + billId);
             }
 
         } catch (Exception e) {
