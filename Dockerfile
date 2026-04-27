@@ -2,18 +2,11 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# 1. Install Node.js 20 (Required for SvelteKit Frontend Build)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
-
-# 2. Optimization: Cache Maven dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
 # 3. Build the Branded Engine
-# This triggers frontend-maven-plugin to build the SvelteKit UI
+# Clean potential artifacts and trigger frontend-maven-plugin
 COPY . .
-RUN mvn clean package -DskipTests
+RUN rm -rf node_dist node_modules frontend/node_modules && \
+    mvn clean package -DskipTests
 
 # --- STAGE 2: Runtime Stage (The Armor) ---
 FROM eclipse-temurin:21-jre-jammy
