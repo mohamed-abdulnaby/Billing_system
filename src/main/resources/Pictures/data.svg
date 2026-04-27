@@ -1,19 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Outer Ring -->
-  <circle cx="32" cy="32" r="30" fill="none" stroke="#FF0000" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
-  <!-- Main Globe Perimeter -->
-  <circle cx="32" cy="32" r="26" fill="none" stroke="#FF0000" stroke-width="2.5"/>
-  <!-- Latitude/Longitude Curves -->
-  <path d="M32 6c-7.18 0-13 11.64-13 26s5.82 26 13 26 13-11.64 13-26-5.82-26-13-26z" fill="none" stroke="#FF0000" stroke-width="1.5" opacity="0.8"/>
-  <path d="M6 32h52M32 6v52" fill="none" stroke="#FF0000" stroke-width="1" opacity="0.6"/>
-  <!-- Data Nodes (Refined Points) -->
-  <circle cx="32" cy="6" r="2.5" fill="#FF0000"/>
-  <circle cx="32" cy="58" r="2.5" fill="#FF0000"/>
-  <circle cx="6" cy="32" r="2.5" fill="#FF0000"/>
-  <circle cx="58" cy="32" r="2.5" fill="#FF0000"/>
-  <circle cx="19" cy="32" r="2" fill="#FF0000"/>
-  <circle cx="45" cy="32" r="2" fill="#FF0000"/>
-  <!-- Core Connection -->
-  <circle cx="32" cy="32" r="4.5" fill="#FF0000"/>
-  <circle cx="32" cy="32" r="8" fill="none" stroke="#FF0000" stroke-width="1" stroke-dasharray="3 1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#FF0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"/>
+  <line x1="2" y1="12" x2="22" y2="12"/>
+  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
 </svg>
