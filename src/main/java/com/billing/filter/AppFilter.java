@@ -67,9 +67,9 @@ public class AppFilter implements Filter {
             }
         }
 
-        // Routing
+        // 2. ROUTING LOGIC
         boolean isApi = path.startsWith("/api/");
-        boolean isAsset = path.startsWith("/_app/") || path.contains(".");
+        boolean isAsset = path.startsWith("/_app/") || (path.contains(".") && !path.endsWith(".html"));
         boolean isRoot = path.equals("/") || path.isEmpty() || path.equals("/index.html");
 
         if (isApi || isAsset) {
@@ -77,7 +77,7 @@ public class AppFilter implements Filter {
         } else if (isRoot) {
             handleHtmlInjection(req, res, chain);
         } else {
-            System.out.println("[AppFilter] Deep link: " + path + " -> Forwarding to index.html");
+            // SPA Deep Links (e.g. /dashboard)
             request.getRequestDispatcher("/index.html").forward(request, response);
         }
     }

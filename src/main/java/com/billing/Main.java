@@ -55,9 +55,14 @@ public class Main {
         
         WebResourceRoot resources = new StandardRoot(ctx);
         if (additionWebInfClasses.exists()) {
-            // IDE Mode: Classes are in a physical folder
+            // IDE Mode: Classes are in target/classes
             resources.addPreResources(new DirResourceSet(resources, "/WEB-INF/classes",
                     additionWebInfClasses.getAbsolutePath(), "/"));
+            
+            // IDE Mode FIX: Ensure static files from src/main/webapp are prioritized
+            resources.addPreResources(new DirResourceSet(resources, "/",
+                    webappFile.getAbsolutePath(), "/"));
+            
             System.out.println("Mapping resources from IDE path: " + additionWebInfClasses.getAbsolutePath());
         } else if (jarFile.isFile() && jarFile.getName().endsWith(".jar")) {
             // Production Mode: Classes are inside the JAR. We map the JAR dynamically.
@@ -71,7 +76,39 @@ public class Main {
 
         tomcat.getConnector(); // Initialize the connector
         tomcat.start();
+        // 4. PRODUCTION: Graceful Shutdown Hook
+        // Ensures the DB pool is closed and Tomcat stops cleanly.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("SHUTDOWN: Stopping FMRZ Billing System...");
+            try {
+                com.billing.db.DB.closePool();
+                tomcat.stop();
+                System.out.println("SHUTDOWN: System stopped gracefully.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
+
+        // 5. OBSERVABILITY: Health Check Endpoint
+        // Used by Railway/Podman to monitor if the app is alive.
+        Context healthCtx = tomcat.addContext("/health", new File(".").getAbsolutePath());
+        Tomcat.addServlet(healthCtx, "HealthCheck", new jakarta.servlet.http.HttpServlet() {
+            @Override
+            protected void doGet(jakarta.servlet.http.HttpServletRequest req, 
+                                jakarta.servlet.http.HttpServletResponse resp) throws java.io.IOException {
+                try (java.sql.Connection conn = com.billing.db.DB.getConnection()) {
+                    resp.setStatus(200);
+                    resp.getWriter().write("{\"status\":\"UP\", \"database\":\"CONNECTED\"}");
+                } catch (Exception e) {
+                    resp.setStatus(503);
+                    resp.getWriter().write("{\"status\":\"DOWN\", \"error\":\"" + e.getMessage() + "\"}");
+                }
+            }
+        });
+        healthCtx.addServletMappingDecoded("/", "HealthCheck");
+
         System.out.println("FMRZ Billing System started on port " + webPort);
+        System.out.println("Health Check available at: http://localhost:" + webPort + "/health");
         tomcat.getServer().await();
     }
 }

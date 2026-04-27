@@ -27,18 +27,27 @@ public class DB {
 
             HikariConfig config = new HikariConfig();
             config.setDriverClassName("org.postgresql.Driver");
-            // BEST PRACTICE: Cloud-First Configuration
-            // We prioritize Environment Variables (DB_URL, DB_USER, DB_PASSWORD).
-            // If they are missing, we fall back to db.properties (Local Dev mode).
-            // This allows the same JAR to run locally and in secure Podman containers.
-            String url = System.getenv("DB_URL");
-            config.setJdbcUrl(url != null ? url : props.getProperty("db.url"));
+            
+            // Safety Net: Priority logic with placeholder detection
+            String url = getEnvOrProp("DB_URL", "db.url");
+            String user = getEnvOrProp("DB_USER", "db.user");
+            String pass = getEnvOrProp("DB_PASSWORD", "db.password");
 
-            String user = System.getenv("DB_USER");
-            config.setUsername(user != null ? user : props.getProperty("db.user"));
+            if (url == null || url.contains("REPLACE_WITH_ENV_VAR")) {
+                System.err.println("\n" + "=".repeat(60));
+                System.err.println("❌ CRITICAL: DATABASE CREDENTIALS MISSING");
+                System.err.println("=".repeat(60));
+                System.err.println("How to fix this:");
+                System.err.println("1. Locally (IntelliJ): Edit your 'Main' Run Configuration.");
+                System.err.println("   Add Environment Variables: DB_URL, DB_USER, DB_PASSWORD");
+                System.err.println("2. Cloud (Railway): Go to the 'Variables' tab and add them.");
+                System.err.println("=".repeat(60) + "\n");
+                throw new RuntimeException("Database URL is missing or placeholder. See logs above for help.");
+            }
 
-            String pass = System.getenv("DB_PASSWORD");
-            config.setPassword(pass != null ? pass : props.getProperty("db.password"));
+            config.setJdbcUrl(url);
+            config.setUsername(user);
+            config.setPassword(pass);
             
             // Pool Configuration
             config.setMaximumPoolSize(10);
@@ -150,5 +159,13 @@ public class DB {
         if (dataSource != null) {
             dataSource.close();
         }
+    }
+
+    private static String getEnvOrProp(String envKey, String propKey) {
+        String val = System.getenv(envKey);
+        if (val == null || val.trim().isEmpty() || val.contains("REPLACE_WITH_ENV_VAR")) {
+            val = props.getProperty(propKey);
+        }
+        return val;
     }
 }

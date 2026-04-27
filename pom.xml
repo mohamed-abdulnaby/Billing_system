@@ -158,24 +158,21 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.15.0</version>
                 <configuration>
-                    <nodeDownloadRoot>https://nodejs.org/dist/</nodeDownloadRoot>
-                    <npmDownloadRoot>https://registry.npmjs.org/npm/-/</npmDownloadRoot>
+                    <installDirectory>frontend</installDirectory>
                 </configuration>
                 <executions>
-<!-- 
                     <execution>
                         <id>install-node-and-npm</id>
                         <goals><goal>install-node-and-npm</goal></goals>
-                        <phase>package</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <nodeVersion>v20.11.0</nodeVersion>
                         </configuration>
                     </execution>
-                    -->
                     <execution>
                         <id>npm-install</id>
                         <goals><goal>npm</goal></goals>
-                        <phase>package</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <workingDirectory>frontend</workingDirectory>
                             <arguments>install</arguments>
@@ -184,7 +181,7 @@
                     <execution>
                         <id>npm-build</id>
                         <goals><goal>npm</goal></goals>
-                        <phase>package</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <workingDirectory>frontend</workingDirectory>
                             <arguments>run build</arguments>
@@ -233,26 +230,31 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <!-- 1. SECURITY: Exclude signatures from dependency JARs. 
-                                             If kept, the JVM will reject the merged JAR as 'corrupt' or 'unsigned'. -->
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                        <!-- 2. CLEANLINESS: Exclude module-info.class. These are 
-                                             unnecessary in a shaded Fat JAR and cause 'strong encapsulation' warnings. -->
-                                        <exclude>module-info.class</exclude>
+                                        <exclude>**/module-info.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
                             <transformers>
-                                <!-- 3. ENTRY POINT: Defines the main class for 'java -jar' execution. -->
+                                <!-- 3. ENTRY POINT: Defines the main class -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.billing.Main</mainClass>
                                 </transformer>
-                                <!-- 4. SPI (Service Provider Interface): Correctly merges files in META-INF/services.
-                                     This is CRITICAL for JDBC drivers and JasperReports to load their plugins. -->
+                                <!-- 4. SPI: Correctly merges files in META-INF/services -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <!-- 5. JASPER FIX: Merge jasperreports_extension.properties instead of overwriting -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>jasperreports_extension.properties</resource>
+                                </transformer>
                             </transformers>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- Exclude redundant servlet-api (Tomcat-embed already provides it) -->
+                                    <exclude>jakarta.servlet:jakarta.servlet-api</exclude>
+                                </excludes>
+                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>
