@@ -2084,9 +2084,9 @@ VALUES
 ------------------------------------------------------------
 INSERT INTO service_package (name, type, amount, priority, price, is_roaming, description)
 VALUES
-    ('Voice Pack',         'voice',      2000, 1,  0,    FALSE, '2000 local minutes per month'),
-    ('Data Pack',          'data',      10000, 1,  0,    FALSE, '10GB data per month'),
-    ('SMS Pack',           'sms',         500, 1,  0,    FALSE, '500 SMS per month'),
+    ('Voice Pack',         'voice',      2000, 1, 75,    FALSE, '2000 local minutes per month'),
+    ('Data Pack',          'data',      10000, 1, 150,   FALSE, '10GB data per month'),
+    ('SMS Pack',           'sms',         500, 1, 25,    FALSE, '500 SMS per month'),
     ('Welcome Bonus',      'free_units',10000, 2,  0,    FALSE, '10GB free data for new customers'),
     ('Roaming Voice Pack', 'voice',       100, 1, 250,   TRUE,  '100 roaming minutes'),
     ('Roaming Data Pack',  'data',       2000, 1, 500,   TRUE,  '2GB roaming data'),
