@@ -64,3 +64,9 @@ frontend_backup_src/
 backend_backup_src/
 docs/
 .m2/
+node_dist/
+input/
+processed/
+*.tmp
+r0qiia_pom.xml
+cookies.txt

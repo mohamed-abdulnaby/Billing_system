@@ -16,7 +16,7 @@
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
         <tomcat.version>11.0.21</tomcat.version>
         <jackson.version>2.18.6</jackson.version>
-        <jasper.version>7.0.4</jasper.version>
+        <jasper.version>7.0.6</jasper.version>
     </properties>
 
     <dependencies>

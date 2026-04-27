@@ -81,6 +81,11 @@ public class Main {
 
         tomcat.getConnector(); // Initialize the connector
         tomcat.start();
+
+        // 6. AUTOMATION: Start Billing Automation Worker
+        // This listens for DB events to generate invoices in the background.
+        new Thread(new com.billing.automation.BillAutomationWorker()).start();
+
         // 4. PRODUCTION: Graceful Shutdown Hook
         // Ensures the DB pool is closed and Tomcat stops cleanly.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
