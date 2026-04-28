@@ -1884,7 +1884,9 @@ CREATE OR REPLACE FUNCTION get_dashboard_stats()
                       suspended_contracts        BIGINT,
                       suspended_debt_contracts   BIGINT,
                       terminated_contracts       BIGINT,
-                      total_cdrs                 BIGINT
+                      total_cdrs                 BIGINT,
+                      revenue                    NUMERIC(12,2),
+                      pending_bills              BIGINT
                   ) AS $$
 BEGIN
     RETURN QUERY
@@ -1895,7 +1897,9 @@ BEGIN
             (SELECT COUNT(*) FROM contract      WHERE status = 'suspended'),
             (SELECT COUNT(*) FROM contract      WHERE status = 'suspended_debt'),
             (SELECT COUNT(*) FROM contract      WHERE status = 'terminated'),
-            (SELECT COUNT(*) FROM cdr);
+            (SELECT COUNT(*) FROM cdr),
+            (SELECT COALESCE(SUM(total_amount), 0) FROM bill WHERE status = 'paid'),
+            (SELECT COUNT(*) FROM bill WHERE status = 'issued');
 END;
 $$ LANGUAGE plpgsql;
 
