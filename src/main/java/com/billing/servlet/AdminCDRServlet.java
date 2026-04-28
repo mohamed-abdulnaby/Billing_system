@@ -19,7 +19,7 @@ public class AdminCDRServlet extends BaseServlet {
             int offset = req.getParameter("offset") != null ? Integer.parseInt(req.getParameter("offset")) : 0;
 
             String sql = "SELECT * from get_cdrs(?,?)";
-            
+
             return DB.executeSelect(sql, limit, offset);
         });
     }
@@ -28,7 +28,7 @@ public class AdminCDRServlet extends BaseServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         try {
             System.out.println("[CDR-IMPORT] Triggered via Admin Panel");
-            
+
             // Best Practice: Use configured paths, with a smart fallback for local dev
             String configInput = DB.getProperty("cdr.input.path");
             String configProcessed = DB.getProperty("cdr.processed.path");
@@ -63,12 +63,12 @@ public class AdminCDRServlet extends BaseServlet {
             int fileCount = (files != null) ? files.length : 0;
 
             com.billing.cdr.CDRParser.processAll(inputDir.getAbsolutePath(), processedDir.getAbsolutePath());
-            
+
             System.out.println("[CDR-IMPORT] Success. Processed " + fileCount + " files.");
             sendJson(res, Map.of(
-                "success", true, 
-                "message", "Import Complete! Processed " + fileCount + " files.",
-                "count", fileCount
+                    "success", true,
+                    "message", "Import Complete! Processed " + fileCount + " files.",
+                    "count", fileCount
             ));
         } catch (Exception e) {
             System.err.println("[CDR-IMPORT] Error: " + e.getMessage());

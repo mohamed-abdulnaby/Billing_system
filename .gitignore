@@ -1,5 +1,6 @@
 # Java / Maven
 target/
+node_dist
 *.class
 *.war
 *.ear

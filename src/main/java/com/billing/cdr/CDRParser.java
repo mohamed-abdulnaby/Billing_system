@@ -88,7 +88,7 @@ public class CDRParser {
                 String line;
                 while ((line = br.readLine()) != null) {
                     if (line.trim().isEmpty()) continue;
-                    
+
                     // User Format: Dial A, Dial B, Service ID, Usage, Time, External charges
                     String[] p = line.split(",", -1);
                     if (p.length < 6) continue;
