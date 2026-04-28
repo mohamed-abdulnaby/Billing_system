@@ -2012,6 +2012,119 @@ BEGIN
       AND is_active   = TRUE;
 END;
 $$ LANGUAGE plpgsql;
+--==========================================================
+--       Function for adding new service package 
+--
+--==========================================================
+
+CREATE OR REPLACE FUNCTION add_new_service_package(
+    p_name character varying,
+    p_type public.service_type,
+    p_amount numeric,
+    p_priority integer,
+    p_price numeric,
+    p_description text DEFAULT NULL,
+    p_is_roaming boolean DEFAULT false
+) RETURNS integer
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_new_id INTEGER;
+BEGIN
+    INSERT INTO service_package (name, type, amount, priority, price, description, is_roaming)
+    VALUES (p_name, p_type, p_amount, p_priority, p_price, p_description, p_is_roaming)
+    RETURNING id INTO v_new_id;
+    
+    RETURN v_new_id;
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'add_new_service_package failed: %', SQLERRM;
+END;
+$$;
+
+--==========================================================
+--       Function for update service package 
+--
+--==========================================================
+CREATE OR REPLACE FUNCTION update_service_package(
+    p_id INTEGER,
+    p_name VARCHAR(255),
+    p_type service_type,
+    p_amount NUMERIC(12,4),
+    p_priority INTEGER,
+    p_price NUMERIC(12,2),
+    p_description TEXT,
+    p_is_roaming BOOLEAN DEFAULT FALSE
+) RETURNS TABLE(
+    id INTEGER,
+    name VARCHAR(255),
+    type service_type,
+    amount NUMERIC(12,4),
+    priority INTEGER,
+    price NUMERIC(12,2),
+    description TEXT,
+    is_roaming BOOLEAN
+) LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN QUERY
+        UPDATE service_package 
+        SET 
+            name = p_name,
+            type = p_type,
+            amount = p_amount,
+            priority = p_priority,
+            price = p_price,
+            description = p_description,
+            is_roaming = p_is_roaming
+        WHERE service_package.id = p_id
+        RETURNING 
+            service_package.id,
+            service_package.name,
+            service_package.type,
+            service_package.amount,
+            service_package.priority,
+            service_package.price,
+            service_package.description,
+            service_package.is_roaming;
+            
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Service package with id % not found', p_id;
+    END IF;
+END;
+$$;
+
+--==========================================================
+--       Function for delete service package 
+--
+--==========================================================
+
+CREATE OR REPLACE FUNCTION delete_service_package(p_id INTEGER) 
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    -- Check if service package is referenced in any active contracts or addons
+    IF EXISTS (
+        SELECT 1 FROM contract_consumption cc 
+        WHERE cc.service_package_id = p_id AND cc.is_billed = FALSE
+    ) THEN
+        RAISE EXCEPTION 'Cannot delete service package: it has active consumption records';
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM contract_addon ca 
+        WHERE ca.service_package_id = p_id AND ca.is_active = TRUE
+    ) THEN
+        RAISE EXCEPTION 'Cannot delete service package: it has active addons';
+    END IF;
+    
+    DELETE FROM service_package WHERE id = p_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Service package with id % not found', p_id;
+    END IF;
+END;
+$$;
+
 -- =========================================================
 -- DUMMY DATA
 -- For testing and demonstration purposes
