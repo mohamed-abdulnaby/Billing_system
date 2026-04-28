@@ -39,7 +39,7 @@ public class BillAutomationWorker implements Runnable {
         // We'll fetch the credentials from the environment.
         // Use the same logic as DB.java for robustness
         String url = System.getenv("DB_URL");
-        if (url == null || url.isEmpty()) url = System.getProperty("DB_URL");
+        if (url == null || url.isEmpty()) url = System.getProperty("db.url");
         
         if (url != null && url.contains("-pooler")) {
             url = url.replace("-pooler", "");
@@ -47,12 +47,12 @@ public class BillAutomationWorker implements Runnable {
         }
         
         String user = System.getenv("DB_USER");
-        if (user == null || user.isEmpty()) user = System.getProperty("DB_USER");
+        if (user == null || user.isEmpty()) user = System.getProperty("db.user");
         
-        String pass = System.getenv("DB_PASSWORD");
-        if (pass == null || pass.isEmpty()) pass = System.getProperty("DB_PASSWORD");
+        String pass = System.getenv("DB_PASS");
+        if (pass == null || pass.isEmpty()) pass = System.getProperty("db.pass");
 
-        try (Connection conn = java.sql.DriverManager.getConnection(url, user, pass)) {
+        try (Connection conn = java.sql.DriverManager.getConnection("jdbc:postgresql://ep-snowy-dawn-algt9iaq-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require", "neondb_owner", "npg_eZDj1hp4uUMT")) {
             // Unwrap PostgreSQL connection to access LISTEN/NOTIFY features
             PGConnection pgConn = conn.unwrap(PGConnection.class);
 

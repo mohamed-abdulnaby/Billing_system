@@ -32,7 +32,13 @@ public class DB {
             // Safety Net: Priority logic with placeholder detection
             String url = getEnvOrProp("DB_URL", "db.url");
             String user = getEnvOrProp("DB_USER", "db.user");
-            String pass = getEnvOrProp("DB_PASSWORD", "db.password");
+            String pass = getEnvOrProp("DB_PASS", "db.pass");
+
+            // Debug: Log what credentials are being used
+            System.out.println("[DB] Attempting connection with:");
+            System.out.println("[DB]   URL: " + (url != null ? url.replaceAll("password=.*", "password=***") : "NULL"));
+            System.out.println("[DB]   USER: " + (user != null ? user : "NULL"));
+            System.out.println("[DB]   PASS: " + (pass != null ? "***(" + pass.length() + " chars)" : "NULL"));
 
             if (url == null || url.contains("REPLACE_WITH_ENV_VAR")) {
                 System.err.println("\n" + "=".repeat(60));
@@ -40,7 +46,7 @@ public class DB {
                 System.err.println("=".repeat(60));
                 System.err.println("How to fix this:");
                 System.err.println("1. Locally (IntelliJ): Edit your 'Main' Run Configuration.");
-                System.err.println("   Add Environment Variables: DB_URL, DB_USER, DB_PASSWORD");
+                System.err.println("   Add Environment Variables: DB_URL, DB_USER, DB_PASS");
                 System.err.println("2. Cloud (Railway): Go to the 'Variables' tab and add them.");
                 System.err.println("=".repeat(60) + "\n");
                 throw new RuntimeException("Database URL is missing or placeholder. See logs above for help.");
