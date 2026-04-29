@@ -184,6 +184,21 @@ CREATE TABLE invoice (
 );
 
 -- ------------------------------------------------------------
+-- REJECTED CDR
+-- ------------------------------------------------------------
+CREATE TABLE rejected_cdr (
+    id               SERIAL PRIMARY KEY,
+    file_id          INTEGER REFERENCES file(id),
+    dial_a           VARCHAR(20),
+    dial_b           VARCHAR(20),
+    start_time       TIMESTAMP,
+    duration         INTEGER,
+    service_id       INTEGER,
+    rejection_reason VARCHAR(255),
+    rejected_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ------------------------------------------------------------
 -- CDR (Call Detail Record)
 -- raw usage event; parsed from file, rated against rateplan
 -- ------------------------------------------------------------
@@ -318,57 +333,52 @@ CREATE OR REPLACE FUNCTION insert_cdr(
 )
 RETURNS INTEGER AS $$
 DECLARE
-v_new_id INTEGER;
+    v_new_id      INTEGER;
+    v_contract_id INTEGER;
+    v_status      contract_status;
 BEGIN
-    -- Validate file exists
+    -- 1. Validate file exists
     IF NOT EXISTS (SELECT 1 FROM file WHERE id = p_file_id) THEN
         RAISE EXCEPTION 'File with id % does not exist', p_file_id;
-END IF;
+    END IF;
 
-    -- Validate service_package exists if provided
+    -- 2. Validate service_package exists if provided
     IF p_service_id IS NOT NULL AND NOT EXISTS (
         SELECT 1 FROM service_package WHERE id = p_service_id
     ) THEN
         RAISE EXCEPTION 'Service package with id % does not exist', p_service_id;
-END IF;
+    END IF;
 
-    -- Validate dial_a is not empty
-    IF p_dial_a IS NULL OR TRIM(p_dial_a) = '' THEN
-        RAISE EXCEPTION 'dial_a (calling party MSISDN) cannot be empty';
-END IF;
+    -- 3. Check for MSISDN Contract Status
+    SELECT id, status INTO v_contract_id, v_status
+    FROM contract 
+    WHERE msisdn = p_dial_a;
 
-    -- Validate duration is non-negative
-    IF p_duration < 0 THEN
-        RAISE EXCEPTION 'Duration cannot be negative';
-END IF;
+    -- 4. REJECTION LOGIC: Handle missing or non-active contracts gracefully
+    IF v_contract_id IS NULL THEN
+        INSERT INTO rejected_cdr (file_id, dial_a, dial_b, start_time, duration, service_id, rejection_reason)
+        VALUES (p_file_id, p_dial_a, p_dial_b, p_start_time, p_duration, p_service_id, 'NO_CONTRACT_FOUND');
+        RETURN 0; -- Success (Graceful Rejection)
+    END IF;
 
-INSERT INTO cdr (
-    file_id,
-    dial_a,
-    dial_b,
-    start_time,
-    duration,
-    service_id,
-    hplmn,
-    vplmn,
-    external_charges,
-    rated_flag
-)
-VALUES (
-           p_file_id,
-           p_dial_a,
-           p_dial_b,
-           p_start_time,
-           p_duration,
-           p_service_id,
-           p_hplmn,
-           p_vplmn,
-           COALESCE(p_external_charges, 0),
-           FALSE
-       )
+    IF v_status != 'active' THEN
+        INSERT INTO rejected_cdr (file_id, dial_a, dial_b, start_time, duration, service_id, rejection_reason)
+        VALUES (p_file_id, p_dial_a, p_dial_b, p_start_time, p_duration, p_service_id, 'CONTRACT_' || UPPER(v_status::TEXT));
+        RETURN 0; -- Success (Graceful Rejection)
+    END IF;
+
+    -- 5. Standard CDR Insertion (Proceed to Rating)
+    INSERT INTO cdr (
+        file_id, dial_a, dial_b, start_time, duration, 
+        service_id, hplmn, vplmn, external_charges, rated_flag
+    )
+    VALUES (
+        p_file_id, p_dial_a, p_dial_b, p_start_time, p_duration,
+        p_service_id, p_hplmn, p_vplmn, COALESCE(p_external_charges, 0), FALSE
+    )
     RETURNING id INTO v_new_id;
 
-RETURN v_new_id;
+    RETURN v_new_id;
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -2845,6 +2855,7 @@ BEGIN
     FROM bill WHERE id = p_bill_id;
     
     -- 1. Bundled usage from contract_consumption (linked by bill_id)
+    -- We ensure even 0-usage bundles show up if they were part of the billing period.
     RETURN QUERY
     SELECT 
         sp.type::TEXT AS service_type,
@@ -2857,12 +2868,12 @@ BEGIN
         (sp.name ~* 'Welcome|Gift|Bonus|Bonus') AS is_promotional,
         CASE 
             WHEN cc.consumed >= cc.quota_limit THEN 'Bundle fully utilized'::TEXT
+            WHEN cc.consumed = 0 THEN 'No usage recorded'::TEXT
             ELSE 'Partial bundle usage'::TEXT
         END AS notes
     FROM contract_consumption cc
     JOIN service_package sp ON cc.service_package_id = sp.id
     WHERE cc.bill_id = p_bill_id
-      AND cc.is_billed = TRUE
     
     UNION ALL
     

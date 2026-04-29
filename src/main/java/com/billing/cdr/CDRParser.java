@@ -202,23 +202,23 @@ public class CDRParser {
                         if (!isUrl) serviceId = smsId;
                     }
 
-                    // Insert via SQL function
-                    try {
-                        cs.registerOutParameter(1, Types.INTEGER);
-                        cs.setInt(2, fileId);
-                        cs.setString(3, dialA);
-                        cs.setString(4, dialB);
-                        cs.setTimestamp(5, ts);
-                        cs.setInt(6, usage);
-                        cs.setInt(7, serviceId);
-                        cs.setNull(8, Types.VARCHAR); // p_hplmn
-                        cs.setNull(9, Types.VARCHAR); // p_vplmn
-                        cs.setBigDecimal(10, BigDecimal.valueOf(externalPiasters / 100.0));
+                    // Insert via SQL function (Database now handles rejections via rejected_cdr table)
+                    cs.registerOutParameter(1, Types.INTEGER);
+                    cs.setInt(2, fileId);
+                    cs.setString(3, dialA);
+                    cs.setString(4, dialB);
+                    cs.setTimestamp(5, ts);
+                    cs.setInt(6, usage);
+                    cs.setInt(7, serviceId);
+                    cs.setNull(8, Types.VARCHAR); // p_hplmn
+                    cs.setNull(9, Types.VARCHAR); // p_vplmn
+                    cs.setBigDecimal(10, BigDecimal.valueOf(externalPiasters / 100.0));
 
-                        cs.execute();
-                    } catch (SQLException sqle) {
-                        System.err.println("  [SKIP] Error on line: " + line + " -> " + sqle.getMessage());
-                        // We continue to the next line instead of crashing
+                    cs.execute();
+                    int resultId = cs.getInt(1);
+                    if (resultId == 0) {
+                        // This was a rejection, database already handled it. 
+                        // We can log it if we want, but it's optional now.
                     }
                 }
             }

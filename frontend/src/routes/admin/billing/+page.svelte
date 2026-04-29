@@ -25,6 +25,13 @@
   let loading = $state(true);
   let loadingAudit = $state(false);
   let showAudit = $state(false);
+  
+  // Rejected CDR (Audit) State
+  let rejectedCdrs = $state([]);
+  let rejectedTotal = $state(0);
+  let showRejected = $state(false);
+  let loadingRejected = $state(false);
+
   let processingBills = $state(false);
   
   // Selection State
@@ -54,7 +61,8 @@
 
       await Promise.all([
         loadBills(),
-        loadAudit()
+        loadAudit(),
+        loadRejected()
       ]);
     } catch (e) {
     } finally {
@@ -120,6 +128,19 @@
       }
     } finally {
       loadingAudit = false;
+    }
+  }
+
+  async function loadRejected() {
+    loadingRejected = true;
+    try {
+      const res = await fetch('/api/admin/audit', { credentials: 'include' });
+      if (res.ok) {
+        rejectedCdrs = await res.json();
+        rejectedTotal = rejectedCdrs.length;
+      }
+    } finally {
+      loadingRejected = false;
     }
   }
 
@@ -391,6 +412,19 @@
       </div>
       <div class="card-hint">{showAudit ? 'Hide Audit' : 'Show Audit'}</div>
     </div>
+    <div class="card stat-card info-card" onclick={() => showRejected = !showRejected} style="cursor:pointer; border-color: {rejectedTotal > 0 ? 'rgba(249, 115, 22, 0.3)' : 'rgba(255, 255, 255, 0.1)'}">
+      <div class="stat-icon-plain">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" 
+             stroke={rejectedTotal > 0 ? "#F97316" : "#888"} stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Blocked Usage</span>
+        <span class="stat-value">{rejectedTotal}</span>
+      </div>
+      <div class="card-hint">{showRejected ? 'Hide Log' : 'Show Rejections'}</div>
+    </div>
   </div>
 
   {#if showAudit}
@@ -521,6 +555,61 @@
               <span class="total-info">{missingTotal} missing</span>
             </div>
           </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+  
+  {#if showRejected}
+    <div class="audit-section animate-fade" style="margin-top: 1rem; border-color: #F97316;">
+      <div class="audit-header" style="border:none; padding-bottom: 1rem;">
+        <div style="display:flex; align-items:center; gap:1.5rem; flex:1">
+          <div class="audit-badge" style="background: rgba(249, 115, 22, 0.1); color: #F97316; border-color: #F97316; border-radius: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Blocked Usage Log
+          </div>
+          <div class="audit-text">
+            <h2 style="color: white; margin: 0;">Access Denied Events</h2>
+            <p style="margin: 0; font-size: 0.9rem; color: #888;">Real-time audit of usage records rejected by the rating engine (e.g. Suspended Contracts).</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick={loadRejected} style="color: #F97316; font-weight: 700;">Refresh Log</button>
+      </div>
+
+      <div class="table-wrapper audit-table-wrapper" style="background: rgba(249, 115, 22, 0.02); min-height: auto; border-color: rgba(249, 115, 22, 0.2); margin-bottom: 2rem;">
+        {#if loadingRejected}
+          <div style="padding: 3rem; text-align: center;">
+            <div class="mini-spinner" style="border-top-color: #F97316; width: 30px; height: 30px;"></div>
+            <p style="margin-top: 1rem; color: #F97316;">Loading audit records...</p>
+          </div>
+        {:else if rejectedCdrs.length === 0}
+          <div style="padding: 3rem; text-align: center; color: #888;">
+             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3; margin-bottom:1rem;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+             <p>No blocked usage recorded in the current audit window.</p>
+          </div>
+        {:else}
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th><th>Source MSISDN</th><th>Target</th><th>Service</th><th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each rejectedCdrs as r}
+                <tr class="hover-row">
+                  <td class="text-muted" style="font-size: 0.85rem;">{r.rejected_at}</td>
+                  <td><span class="id-badge" style="background: rgba(249, 115, 22, 0.1); color: white; border: 1px solid rgba(249, 115, 22, 0.2);">#{r.dial_a}</span></td>
+                  <td>{r.dial_b}</td>
+                  <td><span class="pill {r.service_name?.toLowerCase().includes('voice') ? 'voice' : r.service_name?.toLowerCase().includes('data') ? 'data' : 'sms'}">{r.service_name || 'Unknown'}</span></td>
+                  <td>
+                    <span class="badge status-suspended" style="font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3);">
+                      {r.rejection_reason.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
         {/if}
       </div>
     </div>
