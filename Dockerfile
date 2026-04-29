@@ -20,27 +20,26 @@ RUN addgroup --system javauser && adduser --system --ingroup javauser javauser
 # 2. Install curl for healthchecks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# 2.5 Ensure data folders exist with correct permissions
-RUN mkdir -p /app/input /app/processed && chown -R javauser:javauser /app/input /app/processed
-
 # 3. Copy only the Fat JAR from the build stage
 COPY --from=build /build/target/Telecom-Billing-Engine.jar app.jar
 
-# 4. Copy static resources needed at runtime
-COPY src/main/webapp ./webapp_static
-COPY src/main/resources/invoice.jrxml .
-COPY src/main/resources/logo.svg .
-COPY src/main/resources/Pictures ./Pictures
+# 4. Copy the COMPILED webapp from the build stage (Important for 404 fix)
+# We take it from the source folder because SvelteKit builds directly into it in our pom.xml
+COPY --from=build /build/src/main/webapp ./webapp_static
 
-# 5. Set ownership to the non-root user
+# 5. Copy other runtime resources
+COPY --from=build /build/src/main/resources/invoice.jrxml .
+COPY --from=build /build/src/main/resources/logo.svg .
+COPY --from=build /build/src/main/resources/Pictures ./Pictures
+
+# 6. Set ownership to the non-root user
 RUN chown -R javauser:javauser /app
 
-# 6. Switch to the non-root user
+# 7. Switch to the non-root user
 USER javauser
 
-# 7. Expose the application port
+# 8. Expose the application port
 EXPOSE 8080
 
-# 8. Run the application
-# Environment variables (DB_URL, etc.) are provided at runtime by Railway or Docker Compose
+# 9. Run the application
 ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]
