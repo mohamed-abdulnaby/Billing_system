@@ -2,6 +2,7 @@ package com.billing.util;
 
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JasperLoader {
 
     private static final Map<String, JasperReport> cache = new ConcurrentHashMap<>();
+    
+    static {
+        // Force Jasper 7 to use the correct extensions if shading issues persist
+        DefaultJasperReportsContext context = DefaultJasperReportsContext.getInstance();
+        context.setProperty("net.sf.jasperreports.extension.registry.factory.pdf", 
+                           "net.sf.jasperreports.pdf.type.PdfExtensionsRegistryFactory");
+        // Ensure no display is required for PDF generation
+        System.setProperty("java.awt.headless", "true");
+    }
 
     public static JasperReport getReport(String name) throws JRException {
         if (cache.containsKey(name)) return cache.get(name);
