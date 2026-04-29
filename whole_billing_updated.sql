@@ -1886,29 +1886,6 @@ $$ LANGUAGE plpgsql;
 -- TRIGGERS
 -- ============================================================
 
--- Block CDR insert if contract is not active
-CREATE OR REPLACE FUNCTION validate_cdr_contract()
-       RETURNS TRIGGER AS $$
-       DECLARE v_contract contract;
-BEGIN
-SELECT c.* INTO v_contract
-FROM contract c WHERE c.msisdn = NEW.dial_a;
-IF NOT FOUND THEN
-   RAISE EXCEPTION 'No contract found for MSISDN %', NEW.dial_a;
-END IF ;
-   IF v_contract.status <> 'active' THEN
-      RAISE EXCEPTION 'contract for MSISDN % is not active it is %', NEW.dial_a, v_contract.status;
-END IF;
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
---trigger on cdr before insert to validate contract status
-CREATE TRIGGER trg_cdr_validate_contract
-    BEFORE INSERT ON cdr
-    FOR EACH ROW
-    EXECUTE FUNCTION validate_cdr_contract();
-
 -- Automatically rate CDR after insert
 CREATE OR REPLACE FUNCTION auto_rate_cdr()
            RETURNS TRIGGER AS $$
