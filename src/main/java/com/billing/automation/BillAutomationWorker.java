@@ -65,7 +65,6 @@ public class BillAutomationWorker implements Runnable {
                     }
                 }
             }
-            }
         } catch (Exception e) {
             logger.error("Worker crashed: {}", e.getMessage(), e);
         }
