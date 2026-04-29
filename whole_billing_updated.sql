@@ -2362,7 +2362,31 @@ BEGIN
     VALUES (v_uid, 1, '201000000001', 'active', 200, 200) ON CONFLICT DO NOTHING;
 END $$;
 
+-- 5. Final Rating Run
 SELECT rate_cdr(id) FROM cdr WHERE rated_flag = FALSE;
+
+-- 5.5 SIMULATE ADDON PURCHASES
+DO $$
+DECLARE
+    v_cid INTEGER;
+    v_pkg_id INTEGER;
+BEGIN
+    -- Assign Welcome Gift to about 40% of active users
+    FOR v_cid IN SELECT id FROM contract WHERE status = 'active' AND RANDOM() < 0.4 LOOP
+        BEGIN
+            PERFORM purchase_addon(v_cid, (SELECT id FROM service_package WHERE name = '🎁 Welcome Gift' LIMIT 1));
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+    END LOOP;
+
+    -- Assign Roaming Addons to about 10% of users
+    FOR v_cid IN SELECT id FROM contract WHERE status = 'active' AND RANDOM() < 0.1 LOOP
+        BEGIN
+            PERFORM purchase_addon(v_cid, (SELECT id FROM service_package WHERE name = 'Roaming Data Pack' LIMIT 1));
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+    END LOOP;
+END $$;
 
 DO $$
 DECLARE v_cid INTEGER;
