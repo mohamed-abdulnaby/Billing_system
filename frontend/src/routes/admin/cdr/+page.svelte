@@ -3,8 +3,11 @@
   let search = $state('');
   let loading = $state(true);
   let importing = $state(false);
+  let importResult = $state(null); // success/error message
   let page = $state(0);
   const limit = 50;
+
+  let fileInput; // reference to hidden file input
 
   async function loadCDRs() {
     loading = true;
@@ -22,57 +25,95 @@
   function nextPage() { page++; loadCDRs(); }
   function prevPage() { if (page > 0) { page--; loadCDRs(); } }
 
-  async function importCDRs() {
+  // Opens the file picker
+  function triggerFileInput() {
+    fileInput.click();
+  }
+
+  // Called when user picks a file
+  async function handleFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.name.endsWith('.csv')) {
+      importResult = { success: false, message: 'Please select a CSV file.' };
+      return;
+    }
+
     importing = true;
+    importResult = null;
+
     try {
-      const res = await fetch('/api/admin/cdr', { method: 'POST', credentials: 'include' });
-      if (res.ok) {
+      // Step 1: Upload the file
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadRes = await fetch('/api/admin/cdr/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      const uploadData = await uploadRes.json();
+
+      if (!uploadRes.ok) {
+        importResult = { success: false, message: uploadData.error || 'Upload failed.' };
+        return;
+      }
+
+      // Step 2: Trigger the parser to process the uploaded file
+      const importRes = await fetch('/api/admin/cdr/import', {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      const importData = await importRes.json();
+
+      if (importRes.ok) {
+        importResult = { success: true, message: importData.message || 'File imported successfully.' };
         page = 0;
         await loadCDRs();
+      } else {
+        importResult = { success: false, message: importData.error || 'Import failed.' };
       }
-    } catch (e) {
-      console.error(e);
+
+    } catch (err) {
+      importResult = { success: false, message: 'Cannot connect to server.' };
     } finally {
       importing = false;
+      // Reset input so same file can be re-uploaded if needed
+      fileInput.value = '';
     }
   }
 
   let filteredCDRs = $derived(
-          search ? cdrs.filter(c => c.msisdn.includes(search) || (c.destination && c.destination.includes(search))) : cdrs
+          search
+                  ? cdrs.filter(c => c.msisdn.includes(search) || (c.destination && c.destination.includes(search)))
+                  : cdrs
   );
 
-  // Formatter: Logic updated because API sends MB
   function formatUsage(value, type) {
     if (value === 0) return '0';
     if (!value) return '—';
-
     switch (type) {
-      case 1: // Voice: Seconds to H/M/S
+      case 1:
         const h = Math.floor(value / 3600);
         const m = Math.floor((value % 3600) / 60);
         const s = value % 60;
         return `${h > 0 ? h + 'h ' : ''}${m > 0 ? m + 'm ' : ''}${s}s`;
-
-      case 2: // Data: API sends MB
+      case 2:
         if (value >= 1024) return (value / 1024).toFixed(2) + ' GB';
         return value.toFixed(2) + ' MB';
-
-      case 3: // SMS
-        return value + ' SMS';
-
-      case 4: // Units
-        return value + ' units';
-
-      default:
-        return value;
+      case 3: return value + ' SMS';
+      case 4: return value + ' units';
+      default: return value;
     }
   }
 
   const getTypeInfo = (type) => {
     const map = {
       1: { label: 'Voice', class: 'badge-voice' },
-      2: { label: 'Data', class: 'badge-data' },
-      3: { label: 'SMS', class: 'badge-sms' },
+      2: { label: 'Data',  class: 'badge-data'  },
+      3: { label: 'SMS',   class: 'badge-sms'   },
       4: { label: 'Units', class: 'badge-units' }
     };
     return map[type] || { label: 'Other', class: '' };
@@ -87,21 +128,51 @@
   <div class="page-header">
     <div class="header-main">
       <h1>Call <span class="text-gradient">Explorer</span></h1>
-      <button class="btn-import" onclick={importCDRs} disabled={importing}>
+
+      <!-- Hidden file input -->
+      <input
+              type="file"
+              accept=".csv"
+              bind:this={fileInput}
+              onchange={handleFileSelected}
+              style="display: none;"
+      />
+
+      <!-- Button triggers file picker -->
+      <button class="btn-import" onclick={triggerFileInput} disabled={importing}>
         {#if importing}
-          <div class="mini-spinner"></div> Processing...
+          <div class="mini-spinner"></div> Importing...
         {:else}
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import & Rate New CDRs
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Import CSV File
         {/if}
       </button>
     </div>
+
     <p class="text-muted">Analyze and audit network usage records</p>
+
+    <!-- Import result message -->
+    {#if importResult}
+      <div class="import-result {importResult.success ? 'import-success' : 'import-error'}">
+        {importResult.success ? '✓' : '✗'} {importResult.message}
+      </div>
+    {/if}
   </div>
 
+  <!-- rest of template stays exactly the same -->
   <div class="search-bar animate-fade">
     <div class="input-group">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
       <input type="text" bind:value={search} placeholder="Search MSISDN or Destination..." />
     </div>
   </div>
@@ -121,13 +192,8 @@
         <table>
           <thead>
           <tr>
-            <th>ID</th>
-            <th>MSISDN</th>
-            <th>Destination</th>
-            <th>Usage</th>
-            <th>Type</th>
-            <th>Timestamp</th>
-            <th>Status</th>
+            <th>ID</th><th>MSISDN</th><th>Destination</th>
+            <th>Usage</th><th>Type</th><th>Timestamp</th><th>Status</th>
           </tr>
           </thead>
           <tbody>
@@ -139,9 +205,7 @@
               <td><span class="phone-num">{cdr.destination || '—'}</span></td>
               <td><span class="usage-text">{formatUsage(cdr.duration, cdr.type)}</span></td>
               <td>
-                  <span class="badge {typeInfo.class} badge-base">
-                    {typeInfo.label}
-                  </span>
+                <span class="badge {typeInfo.class} badge-base">{typeInfo.label}</span>
               </td>
               <td class="text-muted">{new Date(cdr.timestamp).toLocaleString()}</td>
               <td>
@@ -155,13 +219,9 @@
         </table>
 
         <div class="pagination">
-          <button class="btn-page" onclick={prevPage} disabled={page === 0}>
-            Previous
-          </button>
+          <button class="btn-page" onclick={prevPage} disabled={page === 0}>Previous</button>
           <span class="page-info">Page {page + 1}</span>
-          <button class="btn-page" onclick={nextPage} disabled={cdrs.length < limit}>
-            Next
-          </button>
+          <button class="btn-page" onclick={nextPage} disabled={cdrs.length < limit}>Next</button>
         </div>
       {/if}
     </div>
@@ -175,35 +235,33 @@
   .btn-import { display: flex; align-items: center; gap: 0.5rem; background: var(--red); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(224, 8, 0, 0.3); }
   .btn-import:hover:not(:disabled) { background: var(--red-light); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(224, 8, 0, 0.4); }
   .btn-import:disabled { opacity: 0.6; cursor: not-allowed; }
+  .mini-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-  .mini-spinner { width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .import-result { margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; font-weight: 500; }
+  .import-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+  .import-error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #ef4444; }
 
   .search-bar { margin-bottom: 2rem; max-width: 400px; }
   .input-group { position: relative; display: flex; align-items: center; }
   .input-group svg { position: absolute; left: 1rem; color: var(--text-muted); }
-  .input-group input { width: 100%; padding: 0.8rem 1rem 0.8rem 3rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 12px; color: white; transition: all 0.3s; }
-  .input-group input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 15px rgba(224, 8, 0, 0.2); }
+  .input-group input { width: 100%; padding: 0.8rem 1rem 0.8rem 3rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: white; transition: all 0.3s; }
+  .input-group input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 15px rgba(224,8,0,0.2); }
 
   .table-card { padding: 0; overflow: hidden; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); }
-  .id-badge { background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; color: var(--text-muted); }
+  .id-badge { background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; color: var(--text-muted); }
   .phone-num { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #3B82F6; }
-
   .usage-text { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #F59E0B; }
-
   .badge-base { border-left: 3px solid transparent; }
-  .badge-voice { border-left-color: #3B82F6; color: #3B82F6; background: rgba(59, 130, 246, 0.1); }
-  .badge-data { border-left-color: #22C55E; color: #22C55E; background: rgba(34, 197, 94, 0.1); }
-  .badge-sms { border-left-color: #A855F7; color: #A855F7; background: rgba(168, 85, 247, 0.1); }
-  .badge-units { border-left-color: #F59E0B; color: #F59E0B; background: rgba(245, 158, 11, 0.1); }
-
+  .badge-voice { border-left-color: #3B82F6; color: #3B82F6; background: rgba(59,130,246,0.1); }
+  .badge-data  { border-left-color: #22C55E; color: #22C55E; background: rgba(34,197,94,0.1); }
+  .badge-sms   { border-left-color: #A855F7; color: #A855F7; background: rgba(168,85,247,0.1); }
+  .badge-units { border-left-color: #F59E0B; color: #F59E0B; background: rgba(245,158,11,0.1); }
   .loading-state, .empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
-  .spinner { width: 40px; height: 40px; border: 4px solid rgba(224, 8, 0, 0.1); border-top-color: var(--red); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
-
+  .spinner { width: 40px; height: 40px; border: 4px solid rgba(224,8,0,0.1); border-top-color: var(--red); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .pagination { display: flex; align-items: center; justify-content: center; gap: 2rem; padding: 1.5rem; border-top: 1px solid var(--border); background: rgba(255, 255, 255, 0.02); }
-  .btn-page { background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .btn-page:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--red); }
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 2rem; padding: 1.5rem; border-top: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  .btn-page { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-page:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--red); }
   .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
   .page-info { font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
 </style>

@@ -2,7 +2,6 @@
 	import '../app.css';
 	import { page } from '$app/stores';
 
-	/** @type {{ children: import('svelte').Snippet }} */
 	let { children } = $props();
 
 	let user = $state(null);
@@ -11,7 +10,6 @@
 	async function checkAuth() {
 		try {
 			const res = await fetch(`/api/auth/me`, { credentials: 'include' });
-
 			if (res.ok) user = await res.json(); else user = null;
 		} catch {
 			user = null;
@@ -37,73 +35,33 @@
 			</a>
 
 			<button
-				class="nav-toggle"
-				onclick={() => navOpen = !navOpen}
-				aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-				aria-expanded={navOpen}
+					class="nav-toggle"
+					onclick={() => navOpen = !navOpen}
+					aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+					aria-expanded={navOpen}
 			><span></span><span></span><span></span></button>
 
 			<div class="nav-links" class:open={navOpen}>
-				<a
-					href="/"
-					class="nav-link"
-					class:active={$page.url.pathname === '/'}
-				>Home</a>
+				<a href="/" class="nav-link" class:active={$page.url.pathname === '/'}>Home</a>
 
-				<a
-					href="/packages"
-					class="nav-link"
-					class:active={$page.url.pathname.startsWith('/packages')}
-				>Packages</a>
+				<a href="/packages" class="nav-link" class:active={$page.url.pathname.startsWith('/packages')}>Packages</a>
 
 				{#if user && user.role === 'admin'}
-					<a
-						href="/admin"
-						class="nav-link"
-						class:active={$page.url.pathname === '/admin'}
-					>Admin Panel</a>
-
-					<a
-						href="/admin/customers"
-						class="nav-link"
-						class:active={$page.url.pathname.startsWith('/admin/customers')}
-					>Customers</a>
-
-					<a
-						href="/admin/contracts"
-						class="nav-link"
-						class:active={$page.url.pathname.startsWith('/admin/contracts')}
-					>Contracts</a>
-
-					<a
-						href="/admin/billing"
-						class="nav-link"
-						class:active={$page.url.pathname.startsWith('/admin/billing')}
-					>Billing</a>
+					<a href="/admin" class="nav-link" class:active={$page.url.pathname === '/admin'}>Admin Panel</a>
+					<a href="/admin/customers" class="nav-link" class:active={$page.url.pathname.startsWith('/admin/customers')}>Customers</a>
+					<a href="/admin/contracts" class="nav-link" class:active={$page.url.pathname.startsWith('/admin/contracts')}>Contracts</a>
+					<a href="/admin/billing" class="nav-link" class:active={$page.url.pathname.startsWith('/admin/billing')}>Billing</a>
 				{:else if user && user.role === 'customer'}
-					<a
-						href="/profile"
-						class="nav-link"
-						class:active={$page.url.pathname === '/profile'}
-					>Profile</a>
-
-					<a
-						href="/profile/invoices"
-						class="nav-link"
-						class:active={$page.url.pathname.startsWith('/profile/invoices')}
-					>My Invoices</a>
+					<a href="/profile" class="nav-link" class:active={$page.url.pathname === '/profile'}>Profile</a>
+					<a href="/profile/invoices" class="nav-link" class:active={$page.url.pathname.startsWith('/profile/invoices')}>My Invoices</a>
 				{/if}
 
 				<div class="nav-spacer"></div>
 
 				{#if user}
 					<button class="btn btn-ghost" onclick={logout} style="margin-right: 0.5rem;">Logout</button>
-					
 					<span class="nav-user">
-						<span
-							class="badge {user.role === 'admin' ? 'badge-admin' : 'badge-customer'}"
-						>{user.role}</span>
-
+						<span class="badge {user.role === 'admin' ? 'badge-admin' : 'badge-customer'}">{user.role}</span>
 						{user.name || user.username}
 					</span>
 				{:else}
@@ -115,7 +73,11 @@
 	</nav>
 
 	<main class="main-content">{@render children()}</main>
-	<footer class="footer"><div class="container"><p>© 2026 FMRZ Telecom Billing — ITI Project</p></div></footer>
+	<footer class="footer">
+		<div class="container">
+			<p>© 2026 FMRZ Telecom Billing — ITI Project</p>
+		</div>
+	</footer>
 </div>
 
 <style>
@@ -128,31 +90,20 @@
 		-webkit-backdrop-filter: blur(20px);
 		border-bottom: 1px solid var(--border);
 	}
-
 	.nav-inner {
 		display: flex;
 		align-items: center;
 		height: 64px;
 		gap: 1rem;
 	}
-
-	.nav-brand {
-		display: flex;
-		align-items: center;
-	}
-
-	.nav-logo {
-		height: 44px;
-		width: auto;
-	}
-
+	.nav-brand { display: flex; align-items: center; }
+	.nav-logo { height: 44px; width: auto; }
 	.nav-links {
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
 		flex: 1;
 	}
-
 	.nav-link {
 		padding: 0.5rem 1rem;
 		border-radius: var(--radius-sm);
@@ -162,22 +113,16 @@
 		color: var(--text-secondary);
 		transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	}
-
 	.nav-link:hover {
 		color: var(--text-primary);
 		background: rgba(255, 255, 255, 0.05);
 		transform: translateY(-1px);
 	}
-
 	.nav-link.active {
-		color: #f59e0b; /* Premium Gold */
+		color: #f59e0b;
 		background: rgba(245, 158, 11, 0.12);
 	}
-
-	.nav-spacer {
-		flex: 1;
-	}
-
+	.nav-spacer { flex: 1; }
 	.nav-user {
 		display: flex;
 		align-items: center;
@@ -186,7 +131,6 @@
 		color: var(--text-secondary);
 		margin-right: 0.5rem;
 	}
-
 	.nav-toggle {
 		display: none;
 		flex-direction: column;
@@ -196,7 +140,6 @@
 		cursor: pointer;
 		padding: 0.5rem;
 	}
-
 	.nav-toggle span {
 		width: 20px;
 		height: 2px;
@@ -204,12 +147,7 @@
 		border-radius: 1px;
 		transition: all 0.3s;
 	}
-
-	.main-content {
-		flex: 1;
-		padding: 2rem 0;
-	}
-
+	.main-content { flex: 1; padding: 2rem 0; }
 	.footer {
 		border-top: 1px solid var(--border);
 		padding: 1.5rem 0;
@@ -217,11 +155,8 @@
 		font-size: 0.8rem;
 		color: var(--text-muted);
 	}
-
 	@media (max-width: 768px) {
-		.nav-toggle {
-			display: flex;
-		}
+		.nav-toggle { display: flex; }
 		.nav-links {
 			display: none;
 			position: absolute;
@@ -233,11 +168,7 @@
 			padding: 1rem;
 			border-bottom: 1px solid var(--border);
 		}
-		.nav-links.open {
-			display: flex;
-		}
-		.nav-spacer {
-			display: none;
-		}
+		.nav-links.open { display: flex; }
+		.nav-spacer { display: none; }
 	}
 </style>
