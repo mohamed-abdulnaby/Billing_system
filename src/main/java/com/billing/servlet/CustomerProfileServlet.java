@@ -15,14 +15,14 @@ import java.util.Properties;
 
 @WebServlet("/api/customer/*")
 public class CustomerProfileServlet extends BaseServlet {
-    
+    private static final org.slf4j.Logger staticLogger = org.slf4j.LoggerFactory.getLogger(CustomerProfileServlet.class);
     private static final Properties config = new Properties();
 
     static {
         try (InputStream is = CustomerProfileServlet.class.getResourceAsStream("/config.properties")) {
             if (is != null) config.load(is);
         } catch (IOException e) {
-            logger.warn("WARNING: Could not load config.properties");
+            staticLogger.warn("WARNING: Could not load config.properties");
         }
     }
 
