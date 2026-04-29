@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 @WebServlet("/api/auth/*")
 public class AuthServlet extends BaseServlet {
 
@@ -33,6 +34,7 @@ public class AuthServlet extends BaseServlet {
         sendJson(res, session.getAttribute("user"));
     }
 
+    @SuppressWarnings("unchecked")
     private void handleLogin(HttpServletRequest req, HttpServletResponse res) throws IOException {
         Map<String, String> body = readJson(req, Map.class);
         String username = body.get("username");
@@ -59,6 +61,7 @@ public class AuthServlet extends BaseServlet {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void handleRegister(HttpServletRequest req, HttpServletResponse res) throws IOException {
         Map<String, String> body = readJson(req, Map.class);
         String username  = body.get("username");
