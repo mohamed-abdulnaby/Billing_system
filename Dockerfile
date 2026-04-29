@@ -42,4 +42,4 @@ USER javauser
 EXPOSE 8080
 
 # 9. Run the application
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx512m", "-Djava.awt.headless=true", "-jar", "app.jar"]
