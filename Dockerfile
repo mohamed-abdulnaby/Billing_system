@@ -4,19 +4,16 @@ WORKDIR /build
 
 # 1. Copy pom.xml and download dependencies (for caching)
 COPY pom.xml .
-# Pre-download dependencies to cache them
 RUN mvn dependency:go-offline -B
 
 # 2. Copy frontend manifests to cache node/npm installation
 COPY frontend/package*.json ./frontend/
-# This triggers the frontend-maven-plugin to download node/npm only if package.json changes
-RUN mvn frontend:install-node-and-npm -B
+# We trigger a partial build that only handles the frontend setup
+RUN mvn generate-resources -DskipTests -B || true
 
 # 3. Copy source code and build
 COPY . .
-# We skip 'clean' to keep the cached node/npm from the previous step if possible, 
-# although in a fresh build stage 'clean' is redundant anyway.
-RUN mvn package -DskipTests
+RUN mvn package -DskipTests -B
 
 # --- STAGE 2: Run the Application (JRE Runtime) ---
 FROM eclipse-temurin:21-jre-jammy
