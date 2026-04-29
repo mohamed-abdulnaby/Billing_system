@@ -135,7 +135,6 @@ CREATE TABLE ror_contract (
                               roaming_voice NUMERIC(12,2) DEFAULT 0.00,
                               roaming_data BIGINT DEFAULT 0,
                               roaming_sms  BIGINT DEFAULT 0,
-                              bill_id      INTEGER,
                               PRIMARY KEY (contract_id, rateplan_id, starting_date)
 );
 
@@ -2941,18 +2940,17 @@ BEGIN
     ORDER BY service_type, is_roaming DESC, category_label;
 END;
 $$ LANGUAGE plpgsql;
-INSERT INTO contract_consumption (contract_id, service_package_id, rateplan_id, starting_date, ending_date, consumed, quota_limit, is_billed, bill_id) VALUES (1, 1, 1, '2026-03-01', '2026-03-31', 310, 1000, true, 17), (1, 3, 1, '2026-03-01', '2026-03-31', 42, 100, true, 17);
 
--- FINAL FIX: Sync all quota limits that were missed during bulk insertion
+-- ============================================================
+-- FINAL SYSTEM OPTIMIZATION
+-- ============================================================
+-- 1. Sync all quota limits that were missed during bulk insertion
 UPDATE contract_consumption cc
 SET quota_limit = sp.amount
 FROM service_package sp
 WHERE cc.service_package_id = sp.id AND cc.quota_limit = 0;
 
-
--- ============================================================
--- GLOBAL SECURITY SWEEP: STANDARD PASSWORD ENFORCEMENT
--- ============================================================
+-- 2. Final Global Security Sweep
 UPDATE user_account SET password = '123456';
 COMMIT;
 
