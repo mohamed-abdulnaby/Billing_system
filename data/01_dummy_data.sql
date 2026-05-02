@@ -2,8 +2,17 @@
 -- MASTER DUMMY DATA LOADER (MERGED & OPTIMIZED)
 -- ============================================================
 
--- 1. Initialize System State
-SELECT initialize_consumption_period('2026-04-01');
+-- Clean up existing test data before loading (idempotent for re-runs)
+DO $$
+BEGIN
+    -- Use CASCADE to handle foreign keys
+    EXECUTE 'TRUNCATE contract_consumption, contract_addon, cdr, rejected_cdr, invoice, bill, contract RESTART IDENTITY CASCADE';
+    DELETE FROM msisdn_pool WHERE msisdn LIKE '201%';
+    DELETE FROM user_account WHERE role = 'customer' AND id > 0;
+END $$;
+
+-- Now load data
+PERFORM initialize_consumption_period('2026-04-01'::DATE);
 
 -- 2. Ensure Audit Table Exists
 CREATE TABLE IF NOT EXISTS rejected_cdr (

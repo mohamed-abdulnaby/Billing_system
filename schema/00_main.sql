@@ -1,6 +1,63 @@
 -- ============================================================
 -- TELECOM BILLING SCHEMA
 -- ============================================================
+-- Drop all functions, tables, and types for clean recreation
+DROP FUNCTION IF EXISTS get_cdr_usage_amount CASCADE;
+DROP FUNCTION IF EXISTS insert_cdr CASCADE;
+DROP FUNCTION IF EXISTS purchase_addon CASCADE;
+DROP FUNCTION IF EXISTS rate_cdr CASCADE;
+DROP FUNCTION IF EXISTS initialize_consumption_period CASCADE;
+DROP FUNCTION IF EXISTS generate_bill CASCADE;
+DROP FUNCTION IF EXISTS generate_all_bills CASCADE;
+DROP FUNCTION IF EXISTS get_missing_bills CASCADE;
+DROP FUNCTION IF EXISTS create_contract CASCADE;
+DROP FUNCTION IF EXISTS get_all_contracts CASCADE;
+DROP FUNCTION IF EXISTS get_contract_by_id CASCADE;
+DROP FUNCTION IF EXISTS get_all_customers CASCADE;
+DROP FUNCTION IF EXISTS get_user_data CASCADE;
+DROP FUNCTION IF EXISTS login CASCADE;
+DROP FUNCTION IF EXISTS get_cdrs CASCADE;
+DROP FUNCTION IF EXISTS get_user_contracts CASCADE;
+DROP FUNCTION IF EXISTS get_user_invoices CASCADE;
+DROP FUNCTION IF EXISTS create_service_package CASCADE;
+DROP FUNCTION IF EXISTS get_all_rateplans CASCADE;
+DROP FUNCTION IF EXISTS get_bill CASCADE;
+DROP FUNCTION IF EXISTS mark_bill_paid CASCADE;
+DROP FUNCTION IF EXISTS generate_invoice CASCADE;
+DROP FUNCTION IF EXISTS pay_bill CASCADE;
+DROP FUNCTION IF EXISTS change_contract_status CASCADE;
+DROP FUNCTION IF EXISTS get_contract_consumption CASCADE;
+DROP FUNCTION IF EXISTS get_all_bills CASCADE;
+DROP FUNCTION IF EXISTS get_bills_by_contract CASCADE;
+DROP FUNCTION IF EXISTS create_customer CASCADE;
+DROP FUNCTION IF EXISTS get_available_msisdns CASCADE;
+DROP FUNCTION IF EXISTS mark_msisdn_taken CASCADE;
+DROP FUNCTION IF EXISTS release_msisdn CASCADE;
+DROP FUNCTION IF EXISTS create_admin CASCADE;
+DROP FUNCTION IF EXISTS change_contract_rateplan CASCADE;
+DROP FUNCTION IF EXISTS auto_rate_cdr CASCADE;
+DROP FUNCTION IF EXISTS auto_initialize_consumption CASCADE;
+DROP FUNCTION IF EXISTS trg_restore_credit_on_payment CASCADE;
+DROP FUNCTION IF EXISTS get_all_service_packages CASCADE;
+DROP FUNCTION IF EXISTS get_service_package_by_id CASCADE;
+DROP FUNCTION IF EXISTS get_rateplan_by_id CASCADE;
+DROP FUNCTION IF EXISTS get_customer_by_id CASCADE;
+DROP FUNCTION IF EXISTS get_dashboard_stats CASCADE;
+DROP FUNCTION IF EXISTS cancel_addon CASCADE;
+DROP FUNCTION IF EXISTS get_contract_addons CASCADE;
+DROP FUNCTION IF EXISTS expire_addons CASCADE;
+DROP FUNCTION IF EXISTS add_new_service_package CASCADE;
+DROP FUNCTION IF EXISTS update_service_package CASCADE;
+DROP FUNCTION IF EXISTS delete_service_package CASCADE;
+DROP FUNCTION IF EXISTS create_rateplan_with_packages CASCADE;
+DROP FUNCTION IF EXISTS delete_rateplan CASCADE;
+DROP FUNCTION IF EXISTS update_rateplan CASCADE;
+DROP FUNCTION IF EXISTS notify_bill_generation CASCADE;
+DROP FUNCTION IF EXISTS get_bill_usage_breakdown CASCADE;
+DROP FUNCTION IF EXISTS get_rateplan_data CASCADE;
+DROP FUNCTION IF EXISTS create_file_record CASCADE;
+DROP FUNCTION IF EXISTS set_file_parsed CASCADE;
+DROP FUNCTION IF EXISTS get_contract_addons CASCADE;
 DROP TABLE IF EXISTS cdr,invoice,bill,ror_contract,contract_consumption,contract_addon,contract,rateplan_service_package,service_package,rateplan,msisdn_pool,user_account,file CASCADE;
 DROP TYPE IF EXISTS service_type,contract_status,bill_status,user_role CASCADE;
 -- ------------------------------------------------------------
@@ -2660,87 +2717,6 @@ VALUES
     (17, 2,  0,  0, 0),
     (18, 1,  0,  0, 0);
 
-------------------------------------------------------------
--- CONTRACT_CONSUMPTION (APRIL 2026)
-------------------------------------------------------------
-INSERT INTO contract_consumption (
-    contract_id, service_package_id, rateplan_id,
-    starting_date, ending_date, consumed, is_billed
-) VALUES
-    -- Alice (Basic: voice+sms)
-    (1, 1, 1, '2026-04-01', '2026-04-30', 350,  FALSE),
-    (1, 3, 1, '2026-04-01', '2026-04-30', 45,   FALSE),
-    -- Bob (Premium Gold: all packages)
-    (2, 1, 2, '2026-04-01', '2026-04-30', 620,  FALSE),
-    (2, 2, 2, '2026-04-01', '2026-04-30', 2100, FALSE),
-    (2, 3, 2, '2026-04-01', '2026-04-30', 85,   FALSE),
-    (2, 4, 2, '2026-04-01', '2026-04-30', 50,   FALSE),
-    (2, 5, 2, '2026-04-01', '2026-04-30', 120,  FALSE),
-    (2, 6, 2, '2026-04-01', '2026-04-30', 400,  FALSE),
-    (2, 7, 2, '2026-04-01', '2026-04-30', 30,   FALSE),
-    -- Carol (Basic)
-    (3, 1, 1, '2026-04-01', '2026-04-30', 180,  FALSE),
-    (3, 3, 1, '2026-04-01', '2026-04-30', 22,   FALSE),
-    -- David (Premium Gold)
-    (4, 1, 2, '2026-04-01', '2026-04-30', 480,  FALSE),
-    (4, 2, 2, '2026-04-01', '2026-04-30', 1800, FALSE),
-    (4, 3, 2, '2026-04-01', '2026-04-30', 65,   FALSE),
-    (4, 4, 2, '2026-04-01', '2026-04-30', 30,   FALSE),
-    -- Eva (Basic)
-    (5, 1, 1, '2026-04-01', '2026-04-30', 95,   FALSE),
-    (5, 3, 1, '2026-04-01', '2026-04-30', 12,   FALSE),
-    -- Frank (Premium Gold)
-    (6, 1, 2, '2026-04-01', '2026-04-30', 750,  FALSE),
-    (6, 2, 2, '2026-04-01', '2026-04-30', 3200, FALSE),
-    (6, 3, 2, '2026-04-01', '2026-04-30', 110,  FALSE),
-    (6, 4, 2, '2026-04-01', '2026-04-30', 50,   FALSE),
-    -- Grace (Basic)
-    (7, 1, 1, '2026-04-01', '2026-04-30', 210,  FALSE),
-    (7, 3, 1, '2026-04-01', '2026-04-30', 18,   FALSE),
-    -- Henry (Premium Gold)
-    (8, 1, 2, '2026-04-01', '2026-04-30', 390,  FALSE),
-    (8, 2, 2, '2026-04-01', '2026-04-30', 1500, FALSE),
-    (8, 3, 2, '2026-04-01', '2026-04-30', 55,   FALSE),
-    (8, 4, 2, '2026-04-01', '2026-04-30', 20,   FALSE),
-    -- Iris (Basic)
-    (9, 1, 1, '2026-04-01', '2026-04-30', 140,  FALSE),
-    (9, 3, 1, '2026-04-01', '2026-04-30', 8,    FALSE),
-    -- Jack (Premium Gold)
-    (10, 1, 2, '2026-04-01', '2026-04-30', 510,  FALSE),
-    (10, 2, 2, '2026-04-01', '2026-04-30', 2400, FALSE),
-    (10, 3, 2, '2026-04-01', '2026-04-30', 75,   FALSE),
-    (10, 4, 2, '2026-04-01', '2026-04-30', 40,   FALSE),
-    -- Karen (Basic - some overage)
-    (11, 1, 1, '2026-04-01', '2026-04-30', 980,  FALSE),  -- over 1000 limit soon
-    (11, 3, 1, '2026-04-01', '2026-04-30', 190,  FALSE),  -- near 200 limit
-    -- Leo (Premium Gold)
-    (12, 1, 2, '2026-04-01', '2026-04-30', 290,  FALSE),
-    (12, 2, 2, '2026-04-01', '2026-04-30', 900,  FALSE),
-    (12, 3, 2, '2026-04-01', '2026-04-30', 35,   FALSE),
-    (12, 4, 2, '2026-04-01', '2026-04-30', 15,   FALSE),
-    -- Noah (Premium Gold)
-    (14, 1, 2, '2026-04-01', '2026-04-30', 430,  FALSE),
-    (14, 2, 2, '2026-04-01', '2026-04-30', 1200, FALSE),
-    (14, 3, 2, '2026-04-01', '2026-04-30', 60,   FALSE),
-    (14, 4, 2, '2026-04-01', '2026-04-30', 25,   FALSE),
-    -- Olivia (Elite Enterprise)
-    (15, 1, 3, '2026-04-01', '2026-04-30', 820,  FALSE),
-    (15, 2, 3, '2026-04-01', '2026-04-30', 3800, FALSE),
-    (15, 3, 3, '2026-04-01', '2026-04-30', 145,  FALSE),
-    (15, 4, 3, '2026-04-01', '2026-04-30', 50,   FALSE),
-    (15, 5, 3, '2026-04-01', '2026-04-30', 80,   FALSE),
-    (15, 6, 3, '2026-04-01', '2026-04-30', 320,  FALSE),
-    (15, 7, 3, '2026-04-01', '2026-04-30', 20,   FALSE),
-    -- Paul (Elite Enterprise - has overage)
-    (16, 1, 3, '2026-04-01', '2026-04-30', 950,  FALSE),
-    (16, 2, 3, '2026-04-01', '2026-04-30', 4900, FALSE),
-    (16, 3, 3, '2026-04-01', '2026-04-30', 180,  FALSE),
-    (16, 4, 3, '2026-04-01', '2026-04-30', 50,   FALSE),
-    -- Quinn (Premium Gold)
-    (17, 1, 2, '2026-04-01', '2026-04-30', 340,  FALSE),
-    (17, 2, 2, '2026-04-01', '2026-04-30', 1100, FALSE),
-    (17, 3, 2, '2026-04-01', '2026-04-30', 48,   FALSE),
-    (17, 4, 2, '2026-04-01', '2026-04-30', 10,   FALSE);
 
 ------------------------------------------------------------
 -- BILLS (FEBRUARY 2026) - all paid

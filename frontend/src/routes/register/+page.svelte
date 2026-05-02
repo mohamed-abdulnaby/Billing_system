@@ -75,7 +75,7 @@
         <div class="form-group">
           <label class="label" for="reg-name">Full Name</label>
           <input id="reg-name" class="input" type="text"
-                 bind:value={name} placeholder="e.g. Ahmed Ali" required />
+                 bind:value={name} placeholder="e.g. Ahmed Hamdey" required />
         </div>
         <div class="form-group">
           <label class="label" for="reg-username">Username</label>

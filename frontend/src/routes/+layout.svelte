@@ -55,7 +55,7 @@
 					<a
 						href="/admin"
 						class="nav-link"
-						class:active={$page.url.pathname === '/admin'}
+						class:active={$page.url.pathname.startsWith('/admin')}
 					>Admin Panel</a>
 
 					<a
