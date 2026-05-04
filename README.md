@@ -35,6 +35,13 @@
 - [Roadmap](#-roadmap)
 
 ---
+## 🎥 Video
+
+
+https://github.com/user-attachments/assets/1517ec22-c37d-48b2-9ad0-6db9e5656f09
+
+
+
 
 ## 🏗️ Architecture Stack
 
